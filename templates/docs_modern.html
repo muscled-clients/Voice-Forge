@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceForge API Documentation</title>
+    <meta name="description" content="Complete API documentation for VoiceForge - Next-generation speech recognition API">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <style>
+        :root {
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-mesh: radial-gradient(at 40% 20%, hsla(28, 100%, 74%, 1) 0px, transparent 50%),
+                            radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 1) 0px, transparent 50%),
+                            radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 1) 0px, transparent 50%),
+                            radial-gradient(at 80% 50%, hsla(340, 100%, 76%, 1) 0px, transparent 50%);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #0a0a0f;
+        }
+        
+        .gradient-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .mesh-gradient {
+            background: var(--gradient-mesh);
+            filter: blur(100px);
+            opacity: 0.3;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(103, 126, 234, 0.2);
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s ease;
+            border-left: 2px solid transparent;
+        }
+        
+        .sidebar-link:hover {
+            background: rgba(103, 126, 234, 0.1);
+            border-left-color: #667eea;
+            transform: translateX(4px);
+        }
+        
+        .sidebar-link.active {
+            background: rgba(103, 126, 234, 0.15);
+            border-left-color: #667eea;
+            color: #667eea;
+        }
+        
+        .code-block {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            opacity: 1;
+        }
+        
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .endpoint-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .method-get { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .method-post { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+        .method-put { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .method-delete { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(103, 126, 234, 0.5);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(103, 126, 234, 0.8);
+        }
+        
+        .search-highlight {
+            background: rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-100 overflow-x-hidden" x-data="{
+    mobileMenu: false,
+    activeSection: 'introduction',
+    searchQuery: '',
+    copiedCode: '',
+    expandedSections: {
+        'getting-started': true,
+        'authentication': false,
+        'endpoints': true,
+        'advanced': true,
+        'examples': false,
+        'errors': false
+    },
+    
+    searchableItems: [
+        { id: 'introduction', title: 'Introduction', keywords: 'intro getting started overview' },
+        { id: 'quick-start', title: 'Quick Start', keywords: 'quick start first request curl' },
+        { id: 'installation', title: 'Installation', keywords: 'install pip npm setup' },
+        { id: 'api-keys', title: 'API Keys', keywords: 'auth authentication key token' },
+        { id: 'oauth', title: 'OAuth', keywords: 'oauth google authentication login' },
+        { id: 'transcribe', title: 'Transcribe Audio', keywords: 'transcribe audio file upload mp3 wav' },
+        { id: 'transcribe-youtube', title: 'YouTube Transcription', keywords: 'youtube video transcribe url' },
+        { id: 'websocket-streaming', title: 'WebSocket Streaming', keywords: 'websocket streaming realtime live audio' },
+        { id: 'user-info', title: 'User Information', keywords: 'user profile info account' },
+        { id: 'usage-stats', title: 'Usage Statistics', keywords: 'usage stats analytics metrics' },
+        { id: 'advanced-features', title: 'Advanced Features', keywords: 'speaker diarization language detection' },
+        { id: 'error-codes', title: 'Error Codes', keywords: 'errors error codes http status' },
+        { id: 'troubleshooting', title: 'Troubleshooting', keywords: 'troubleshoot help issues problems' }
+    ],
+    
+    get filteredItems() {
+        if (!this.searchQuery.trim()) return this.searchableItems;
+        
+        const query = this.searchQuery.toLowerCase();
+        return this.searchableItems.filter(item => 
+            item.title.toLowerCase().includes(query) ||
+            item.keywords.toLowerCase().includes(query)
+        );
+    },
+    
+    searchAndHighlight() {
+        // If there's a search query and results, show the first result
+        if (this.searchQuery.trim() && this.filteredItems.length > 0) {
+            this.activeSection = this.filteredItems[0].id;
+            // Also expand the appropriate section
+            const sectionId = this.filteredItems[0].id;
+            if (['transcribe', 'transcribe-youtube', 'websocket-streaming', 'user-info', 'usage-stats'].includes(sectionId)) {
+                this.expandedSections['endpoints'] = true;
+            } else if (['api-keys', 'oauth'].includes(sectionId)) {
+                this.expandedSections['authentication'] = true;
+            } else if (['advanced-features'].includes(sectionId)) {
+                this.expandedSections['advanced'] = true;
+            } else if (['error-codes', 'troubleshooting'].includes(sectionId)) {
+                this.expandedSections['errors'] = true;
+            } else if (['introduction', 'quick-start', 'installation'].includes(sectionId)) {
+                this.expandedSections['getting-started'] = true;
+            }
+        }
+    }
+}">
+    
+    <!-- Animated Background -->
+    <div class="fixed inset-0 -z-10">
+        <div class="absolute inset-0 mesh-gradient"></div>
+        <div class="absolute inset-0 bg-gray-950 opacity-95"></div>
+    </div>
+    
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 glass-effect border-b border-gray-800/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">VF</span>
+                        </div>
+                        <span class="text-lg font-bold">VoiceForge</span>
+                    </a>
+                    <span class="text-sm text-gray-400 hidden sm:block">/ API Documentation</span>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center space-x-6">
+                    <a href="/" class="text-gray-300 hover:text-purple-400 transition">Home</a>
+                    <a href="/developer" class="text-gray-300 hover:text-purple-400 transition">Developer Portal</a>
+                    <a href="#" class="text-purple-400 font-medium">Documentation</a>
+                </nav>
+                
+                <!-- Mobile Menu Button -->
+                <button @click="mobileMenu = !mobileMenu" class="md:hidden p-2">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenu" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 bg-gray-900 bg-opacity-75 md:hidden" @click="mobileMenu = false"></div>
+    
+    <div class="flex pt-16">
+        <!-- Sidebar -->
+        <aside class="fixed inset-y-16 left-0 z-50 w-72 transform md:relative md:inset-y-0 md:translate-x-0 transition duration-200 ease-in-out md:block sidebar" :class="{ 'open': mobileMenu }">
+            <div class="h-full glass-dark border-r border-gray-800/50 overflow-y-auto">
+                <div class="p-6">
+                    <!-- Search -->
+                    <div class="relative mb-6">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="search" class="h-4 w-4 text-gray-400"></i>
+                        </div>
+                        <input x-model="searchQuery" @input="searchAndHighlight()" type="text" placeholder="Search documentation..." class="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-sm text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent">
+                    </div>
+                    
+                    <!-- Navigation -->
+                    <nav class="space-y-1">
+                        <!-- Getting Started -->
+                        <div>
+                            <button @click="expandedSections['getting-started'] = !expandedSections['getting-started']" class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-300 hover:text-white">
+                                <span>Getting Started</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': expandedSections['getting-started'] }"></i>
+                            </button>
+                            <div x-show="expandedSections['getting-started']" x-transition class="ml-4 space-y-1">
+                                <a href="#introduction" @click="activeSection = 'introduction'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'introduction' }">Introduction</a>
+                                <a href="#quick-start" @click="activeSection = 'quick-start'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'quick-start' }">Quick Start</a>
+                                <a href="#installation" @click="activeSection = 'installation'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'installation' }">Installation</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Authentication -->
+                        <div>
+                            <button @click="expandedSections['authentication'] = !expandedSections['authentication']" class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-300 hover:text-white">
+                                <span>Authentication</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': expandedSections['authentication'] }"></i>
+                            </button>
+                            <div x-show="expandedSections['authentication']" x-transition class="ml-4 space-y-1">
+                                <a href="#api-keys" @click="activeSection = 'api-keys'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'api-keys' }">API Keys</a>
+                                <a href="#oauth" @click="activeSection = 'oauth'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'oauth' }">OAuth 2.0</a>
+                            </div>
+                        </div>
+                        
+                        <!-- API Endpoints -->
+                        <div>
+                            <button @click="expandedSections['endpoints'] = !expandedSections['endpoints']" class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-300 hover:text-white">
+                                <span>API Endpoints</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': expandedSections['endpoints'] }"></i>
+                            </button>
+                            <div x-show="expandedSections['endpoints']" x-transition class="ml-4 space-y-1">
+                                <a href="#transcribe" @click="activeSection = 'transcribe'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'transcribe' }">Transcribe Audio</a>
+                                <a href="#transcribe-youtube" @click="activeSection = 'transcribe-youtube'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'transcribe-youtube' }">YouTube Transcription</a>
+                                <a href="#websocket-streaming" @click="activeSection = 'websocket-streaming'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'websocket-streaming' }">WebSocket Streaming</a>
+                                <a href="#user-info" @click="activeSection = 'user-info'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'user-info' }">User Information</a>
+                                <a href="#usage-stats" @click="activeSection = 'usage-stats'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'usage-stats' }">Usage Statistics</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Advanced Features -->
+                        <div>
+                            <button @click="expandedSections['advanced'] = !expandedSections['advanced']" class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-300 hover:text-white">
+                                <span>Advanced Features</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': expandedSections['advanced'] }"></i>
+                            </button>
+                            <div x-show="expandedSections['advanced']" x-transition class="ml-4 space-y-1">
+                                <a href="#advanced-features" @click="activeSection = 'advanced-features'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'advanced-features' }">Overview</a>
+                                <a href="#speaker-diarization" @click="activeSection = 'speaker-diarization'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'speaker-diarization' }">Speaker Diarization</a>
+                                <a href="#language-detection" @click="activeSection = 'language-detection'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'language-detection' }">Language Detection</a>
+                                <a href="#noise-reduction" @click="activeSection = 'noise-reduction'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'noise-reduction' }">Noise Reduction</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Examples -->
+                        <div>
+                            <button @click="expandedSections['examples'] = !expandedSections['examples']" class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-300 hover:text-white">
+                                <span>Code Examples</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': expandedSections['examples'] }"></i>
+                            </button>
+                            <div x-show="expandedSections['examples']" x-transition class="ml-4 space-y-1">
+                                <a href="#python-examples" @click="activeSection = 'python-examples'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'python-examples' }">Python</a>
+                                <a href="#javascript-examples" @click="activeSection = 'javascript-examples'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'javascript-examples' }">JavaScript</a>
+                                <a href="#curl-examples" @click="activeSection = 'curl-examples'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'curl-examples' }">cURL</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Error Handling -->
+                        <div>
+                            <button @click="expandedSections['errors'] = !expandedSections['errors']" class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-300 hover:text-white">
+                                <span>Error Handling</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': expandedSections['errors'] }"></i>
+                            </button>
+                            <div x-show="expandedSections['errors']" x-transition class="ml-4 space-y-1">
+                                <a href="#error-codes" @click="activeSection = 'error-codes'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'error-codes' }">Error Codes</a>
+                                <a href="#troubleshooting" @click="activeSection = 'troubleshooting'; mobileMenu = false" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white" :class="{ 'active': activeSection === 'troubleshooting' }">Troubleshooting</a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1 md:ml-72">
+            <div class="max-w-4xl mx-auto px-6 py-8">
+                
+                <!-- Introduction -->
+                <section id="introduction" class="mb-16" x-show="activeSection === 'introduction'">
+                    <div class="mb-8">
+                        <h1 class="text-4xl font-bold mb-4">
+                            <span class="gradient-text">VoiceForge API</span> Documentation
+                        </h1>
+                        <p class="text-xl text-gray-400 leading-relaxed">
+                            Welcome to the VoiceForge API documentation. Our speech recognition API provides 99%+ accuracy across 100+ languages with enterprise-grade reliability.
+                        </p>
+                    </div>
+                    
+                    <!-- Feature Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="glass-effect rounded-xl p-6 hover-lift">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mb-4">
+                                <i data-lucide="zap" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">Ultra-Fast</h3>
+                            <p class="text-gray-400 text-sm">Process audio files in under 2 seconds with our optimized Whisper models.</p>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6 hover-lift">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-4">
+                                <i data-lucide="shield" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">Secure</h3>
+                            <p class="text-gray-400 text-sm">Enterprise-grade security with OAuth 2.0 and encrypted data transmission.</p>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6 hover-lift">
+                            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
+                                <i data-lucide="globe" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">Global</h3>
+                            <p class="text-gray-400 text-sm">Support for 100+ languages with automatic language detection.</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Quick Start -->
+                <section id="quick-start" class="mb-16" x-show="activeSection === 'quick-start'">
+                    <h2 class="text-3xl font-bold mb-6">Quick Start</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-8">
+                        <h3 class="text-xl font-semibold mb-4">1. Get Your API Key</h3>
+                        <p class="text-gray-400 mb-4">Sign up for a free account and get your API key from the developer portal.</p>
+                        <a href="/developer" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:from-purple-600 hover:to-pink-600 transition">
+                            <i data-lucide="key" class="w-4 h-4 mr-2"></i>
+                            Get API Key
+                        </a>
+                    </div>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-8">
+                        <h3 class="text-xl font-semibold mb-4">2. Make Your First Request</h3>
+                        <p class="text-gray-400 mb-4">Send a POST request to our transcription endpoint:</p>
+                        
+                        <div class="code-block relative">
+                            <button @click="copyCode('curl -X POST http://localhost:8000/api/v1/transcribe \\\n  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \\\n  -F &quot;file=@audio.wav&quot;')" class="copy-btn">
+                                <span x-text="copiedCode === 'quick-start-curl' ? 'Copied!' : 'Copy'"></span>
+                            </button>
+                            <pre><code class="language-bash">curl -X POST http://localhost:8000/api/v1/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@audio.wav"</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-effect rounded-xl p-6">
+                        <h3 class="text-xl font-semibold mb-4">3. Get Your Results</h3>
+                        <p class="text-gray-400 mb-4">Receive structured JSON response with transcription data:</p>
+                        
+                        <div class="code-block relative">
+                            <button @click="copyCode('{\\n  &quot;status&quot;: &quot;success&quot;,\\n  &quot;transcription&quot;: {\\n    &quot;text&quot;: &quot;Hello, this is a test transcription.&quot;,\\n    &quot;language&quot;: &quot;en&quot;,\\n    &quot;confidence&quot;: 0.95,\\n    &quot;duration&quot;: 3.2,\\n    &quot;word_count&quot;: 6\\n  }\\n}')" class="copy-btn">
+                                <span x-text="copiedCode === 'quick-start-response' ? 'Copied!' : 'Copy'"></span>
+                            </button>
+                            <pre><code class="language-json">{
+  "status": "success",
+  "transcription": {
+    "text": "Hello, this is a test transcription.",
+    "language": "en",
+    "confidence": 0.95,
+    "duration": 3.2,
+    "word_count": 6
+  }
+}</code></pre>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Installation -->
+                <section id="installation" class="mb-16" x-show="activeSection === 'installation'">
+                    <h2 class="text-3xl font-bold mb-6">Installation & Setup</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4">Developer Account Setup</h3>
+                        <ol class="list-decimal list-inside space-y-3 text-gray-300">
+                            <li>Visit the <a href="/developer" class="text-blue-400 hover:text-blue-300">Developer Portal</a> to create your account</li>
+                            <li>Verify your email address</li>
+                            <li>Generate your first API key</li>
+                            <li>Start with the free tier (1,000 minutes/month)</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div class="glass-effect rounded-xl p-6">
+                            <h4 class="text-lg font-semibold mb-4">Python SDK</h4>
+                            <pre><code class="language-bash">pip install voiceforge</code></pre>
+                            <p class="text-sm text-gray-400 mt-2">Official Python SDK with WebSocket streaming support</p>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6">
+                            <h4 class="text-lg font-semibold mb-4">JavaScript/TypeScript</h4>
+                            <pre><code class="language-bash">npm install @voiceforge/sdk</code></pre>
+                            <p class="text-sm text-gray-400 mt-2">Works in Node.js and browsers with React components</p>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-effect rounded-xl p-6">
+                        <h4 class="text-lg font-semibold mb-4">Environment Variables</h4>
+                        <pre><code class="language-bash"># .env file
+VOICEFORGE_API_KEY=your_api_key_here
+VOICEFORGE_BASE_URL=https://api.voiceforge.ai</code></pre>
+                        <p class="text-gray-400 mt-3">Store your API key securely using environment variables. Never commit API keys to your repository.</p>
+                    </div>
+                </section>
+                
+                <!-- API Keys -->
+                <section id="api-keys" class="mb-16" x-show="activeSection === 'api-keys'">
+                    <h2 class="text-3xl font-bold mb-6">Authentication</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <span class="endpoint-badge method-post mr-3">API KEY</span>
+                            API Key Authentication
+                        </h3>
+                        <p class="text-gray-400 mb-4">Include your API key in the Authorization header of every request:</p>
+                        
+                        <div class="code-block relative">
+                            <button @click="copyCode('Authorization: Bearer YOUR_API_KEY')" class="copy-btn">
+                                <span x-text="copiedCode === 'auth-header' ? 'Copied!' : 'Copy'"></span>
+                            </button>
+                            <pre><code class="language-bash">Authorization: Bearer YOUR_API_KEY</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl p-6">
+                        <div class="flex items-start space-x-3">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400 mt-0.5"></i>
+                            <div>
+                                <h4 class="font-semibold text-amber-400 mb-2">Keep Your API Key Secure</h4>
+                                <p class="text-amber-200/80 text-sm">Never expose your API key in client-side code. Store it securely on your server and use environment variables.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- OAuth 2.0 -->
+                <section id="oauth" class="mb-16" x-show="activeSection === 'oauth'">
+                    <h2 class="text-3xl font-bold mb-6">OAuth 2.0 Authentication</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-6">
+                        <h3 class="text-xl font-semibold mb-4">Authorization Code Flow</h3>
+                        <p class="text-gray-400 mb-4">For applications that need to act on behalf of users, VoiceForge supports OAuth 2.0 with PKCE.</p>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">1. Authorization Request</h4>
+                                <pre><code class="language-bash">GET https://api.voiceforge.ai/oauth/authorize?
+  response_type=code&
+  client_id=YOUR_CLIENT_ID&
+  redirect_uri=YOUR_REDIRECT_URI&
+  scope=transcribe:read transcribe:write&
+  state=RANDOM_STRING&
+  code_challenge=CODE_CHALLENGE&
+  code_challenge_method=S256</code></pre>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-lg font-semibold mb-2">2. Token Exchange</h4>
+                                <pre><code class="language-bash">POST https://api.voiceforge.ai/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&
+code=AUTHORIZATION_CODE&
+client_id=YOUR_CLIENT_ID&
+code_verifier=CODE_VERIFIER&
+redirect_uri=YOUR_REDIRECT_URI</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="glass-effect rounded-xl p-6">
+                            <h4 class="text-lg font-semibold mb-3">Available Scopes</h4>
+                            <ul class="space-y-2 text-sm">
+                                <li><code class="text-blue-400">transcribe:read</code> - View transcription history</li>
+                                <li><code class="text-blue-400">transcribe:write</code> - Create new transcriptions</li>
+                                <li><code class="text-blue-400">streaming:connect</code> - WebSocket streaming access</li>
+                                <li><code class="text-blue-400">account:read</code> - View account information</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6">
+                            <h4 class="text-lg font-semibold mb-3">Token Usage</h4>
+                            <pre><code class="language-bash">Authorization: Bearer YOUR_ACCESS_TOKEN</code></pre>
+                            <p class="text-gray-400 text-sm mt-2">Include the access token in the Authorization header for all API requests.</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Transcribe Endpoint -->
+                <section id="transcribe" class="mb-16" x-show="activeSection === 'transcribe'">
+                    <h2 class="text-3xl font-bold mb-6">Transcribe Audio</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-6">
+                        <div class="flex items-center mb-4">
+                            <span class="endpoint-badge method-post mr-3">POST</span>
+                            <code class="text-lg font-mono">/api/v1/transcribe</code>
+                        </div>
+                        <p class="text-gray-400">Convert audio files to text with high accuracy and detailed metadata.</p>
+                    </div>
+                    
+                    <!-- Request Parameters -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Request Parameters</h3>
+                        <div class="glass-effect rounded-xl overflow-hidden">
+                            <table class="w-full">
+                                <thead class="bg-gray-800/50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Parameter</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Required</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-800/50">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-purple-400">file</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">File</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-400">Yes</td>
+                                        <td class="px-6 py-4 text-sm text-gray-400">Audio file to transcribe (MP3, WAV, M4A, etc.)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-purple-400">language</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">String</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">No</td>
+                                        <td class="px-6 py-4 text-sm text-gray-400">Language code (auto-detected if not provided)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Code Examples -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Example Request</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- cURL -->
+                            <div class="glass-effect rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-semibold flex items-center">
+                                        <i data-lucide="terminal" class="w-4 h-4 mr-2"></i>
+                                        cURL
+                                    </h4>
+                                </div>
+                                <div class="code-block relative">
+                                    <button @click="copyCode('curl -X POST http://localhost:8000/api/v1/transcribe \\\n  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \\\n  -F &quot;file=@path/to/audio.wav&quot; \\\n  -F &quot;language=en&quot;')" class="copy-btn">
+                                        <span x-text="copiedCode === 'transcribe-curl' ? 'Copied!' : 'Copy'"></span>
+                                    </button>
+                                    <pre><code class="language-bash">curl -X POST http://localhost:8000/api/v1/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@path/to/audio.wav" \
+  -F "language=en"</code></pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Python -->
+                            <div class="glass-effect rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-semibold flex items-center">
+                                        <i data-lucide="code" class="w-4 h-4 mr-2"></i>
+                                        Python
+                                    </h4>
+                                </div>
+                                <div class="code-block relative">
+                                    <button @click="copyCode('import requests\\n\\nurl = &quot;http://localhost:8000/api/v1/transcribe&quot;\\nheaders = {&quot;Authorization&quot;: &quot;Bearer YOUR_API_KEY&quot;}\\nfiles = {&quot;file&quot;: open(&quot;audio.wav&quot;, &quot;rb&quot;)}\\ndata = {&quot;language&quot;: &quot;en&quot;}\\n\\nresponse = requests.post(url, headers=headers, files=files, data=data)\\nresult = response.json()\\nprint(result)')" class="copy-btn">
+                                        <span x-text="copiedCode === 'transcribe-python' ? 'Copied!' : 'Copy'"></span>
+                                    </button>
+                                    <pre><code class="language-python">import requests
+
+url = "http://localhost:8000/api/v1/transcribe"
+headers = {"Authorization": "Bearer YOUR_API_KEY"}
+files = {"file": open("audio.wav", "rb")}
+data = {"language": "en"}
+
+response = requests.post(url, headers=headers, files=files, data=data)
+result = response.json()
+print(result)</code></pre>
+                                </div>
+                            </div>
+                            
+                            <!-- JavaScript -->
+                            <div class="glass-effect rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-semibold flex items-center">
+                                        <i data-lucide="code-2" class="w-4 h-4 mr-2"></i>
+                                        JavaScript
+                                    </h4>
+                                </div>
+                                <div class="code-block relative">
+                                    <button @click="copyCode('const formData = new FormData();\\nformData.append(&quot;file&quot;, audioFile);\\nformData.append(&quot;language&quot;, &quot;en&quot;);\\n\\nfetch(&quot;http://localhost:8000/api/v1/transcribe&quot;, {\\n  method: &quot;POST&quot;,\\n  headers: {\\n    &quot;Authorization&quot;: &quot;Bearer YOUR_API_KEY&quot;\\n  },\\n  body: formData\\n})\\n.then(response => response.json())\\n.then(data => console.log(data));')" class="copy-btn">
+                                        <span x-text="copiedCode === 'transcribe-js' ? 'Copied!' : 'Copy'"></span>
+                                    </button>
+                                    <pre><code class="language-javascript">const formData = new FormData();
+formData.append("file", audioFile);
+formData.append("language", "en");
+
+fetch("http://localhost:8000/api/v1/transcribe", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer YOUR_API_KEY"
+  },
+  body: formData
+})
+.then(response => response.json())
+.then(data => console.log(data));</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Response -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Response Format</h3>
+                        <div class="glass-effect rounded-xl p-6">
+                            <div class="code-block relative">
+                                <button @click="copyCode('{\\n  &quot;status&quot;: &quot;success&quot;,\\n  &quot;transcription&quot;: {\\n    &quot;id&quot;: &quot;trans_123456&quot;,\\n    &quot;text&quot;: &quot;Hello, this is a test transcription with multiple sentences.&quot;,\\n    &quot;language&quot;: &quot;en&quot;,\\n    &quot;confidence&quot;: 0.95,\\n    &quot;duration&quot;: 5.2,\\n    &quot;word_count&quot;: 9\\n  },\\n  &quot;processing_time&quot;: 1.45,\\n  &quot;model_used&quot;: &quot;whisper-base&quot;\\n}')" class="copy-btn">
+                                    <span x-text="copiedCode === 'transcribe-response' ? 'Copied!' : 'Copy'"></span>
+                                </button>
+                                <pre><code class="language-json">{
+  "status": "success",
+  "transcription": {
+    "id": "trans_123456",
+    "text": "Hello, this is a test transcription with multiple sentences.",
+    "language": "en",
+    "confidence": 0.95,
+    "duration": 5.2,
+    "word_count": 9
+  },
+  "processing_time": 1.45,
+  "model_used": "whisper-base"
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Advanced Features -->
+                <section id="advanced-features" class="mb-16" x-show="activeSection === 'advanced-features'">
+                    <h2 class="text-3xl font-bold mb-6">Advanced Features</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-6">
+                        <p class="text-gray-400">VoiceForge includes cutting-edge AI features for enhanced speech recognition and analysis.</p>
+                    </div>
+                    
+                    <!-- Speaker Diarization -->
+                    <div id="speaker-diarization" class="mb-8">
+                        <h3 class="text-2xl font-semibold mb-4 text-cyan-400">Speaker Diarization</h3>
+                        <div class="glass-effect rounded-xl p-6 mb-4">
+                            <p class="text-gray-400 mb-4">Automatically identify and separate multiple speakers in audio recordings using advanced voice analysis.</p>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Features</h4>
+                            <ul class="grid md:grid-cols-2 gap-2 text-sm text-gray-300 mb-4">
+                                <li>• 22-feature voice characteristic analysis</li>
+                                <li>• Real-time speaker clustering</li>
+                                <li>• Support for up to 10 speakers</li>
+                                <li>• Voice quality assessment</li>
+                                <li>• F0 (pitch) detection</li>
+                                <li>• MFCC coefficient analysis</li>
+                            </ul>
+                            
+                            <h4 class="text-lg font-semibold mb-3">API Usage</h4>
+                            <pre><code class="language-json">{
+  "type": "configure",
+  "config": {
+    "speaker_diarization": true,
+    "max_speakers": 5,
+    "encoding": "linear16",
+    "sample_rate": 16000
+  }
+}</code></pre>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Response Format</h4>
+                            <pre><code class="language-json">{
+  "type": "final",
+  "transcript": "Hello from the first speaker",
+  "speaker_id": "speaker_1",
+  "speaker_info": {
+    "confidence": 0.95,
+    "characteristics": {
+      "pitch_mean": 180.5,
+      "voice_quality": "clear"
+    }
+  },
+  "words": [
+    {
+      "word": "Hello",
+      "start": 0.0,
+      "end": 0.5,
+      "speaker": "speaker_1"
+    }
+  ]
+}</code></pre>
+                        </div>
+                    </div>
+                    
+                    <!-- Language Detection -->
+                    <div id="language-detection" class="mb-8">
+                        <h3 class="text-2xl font-semibold mb-4 text-purple-400">Language Auto-Detection</h3>
+                        <div class="glass-effect rounded-xl p-6 mb-4">
+                            <p class="text-gray-400 mb-4">Automatically detect and switch between languages during transcription using n-gram pattern analysis.</p>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Supported Languages</h4>
+                            <div class="grid md:grid-cols-5 gap-3 mb-4">
+                                <div class="text-center p-2 bg-purple-500/20 rounded-lg">
+                                    <div class="text-lg font-bold">🇺🇸</div>
+                                    <div class="text-sm">English</div>
+                                </div>
+                                <div class="text-center p-2 bg-purple-500/20 rounded-lg">
+                                    <div class="text-lg font-bold">🇪🇸</div>
+                                    <div class="text-sm">Spanish</div>
+                                </div>
+                                <div class="text-center p-2 bg-purple-500/20 rounded-lg">
+                                    <div class="text-lg font-bold">🇫🇷</div>
+                                    <div class="text-sm">French</div>
+                                </div>
+                                <div class="text-center p-2 bg-purple-500/20 rounded-lg">
+                                    <div class="text-lg font-bold">🇩🇪</div>
+                                    <div class="text-sm">German</div>
+                                </div>
+                                <div class="text-center p-2 bg-purple-500/20 rounded-lg">
+                                    <div class="text-lg font-bold">🇮🇹</div>
+                                    <div class="text-sm">Italian</div>
+                                </div>
+                            </div>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Configuration</h4>
+                            <pre><code class="language-json">{
+  "type": "configure",
+  "config": {
+    "language": "auto",
+    "language_detection": true,
+    "detection_sensitivity": 0.8
+  }
+}</code></pre>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Response with Language Info</h4>
+                            <pre><code class="language-json">{
+  "type": "final",
+  "transcript": "Bonjour, comment allez-vous?",
+  "language": "fr",
+  "language_confidence": 0.96,
+  "detected_languages": [
+    {"code": "fr", "confidence": 0.96, "name": "French"},
+    {"code": "en", "confidence": 0.04, "name": "English"}
+  ]
+}</code></pre>
+                        </div>
+                    </div>
+                    
+                    <!-- Noise Reduction -->
+                    <div id="noise-reduction" class="mb-8">
+                        <h3 class="text-2xl font-semibold mb-4 text-pink-400">Noise Reduction</h3>
+                        <div class="glass-effect rounded-xl p-6">
+                            <p class="text-gray-400 mb-4">Advanced multi-stage audio preprocessing for crystal-clear transcriptions in noisy environments.</p>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Processing Pipeline</h4>
+                            <div class="grid md:grid-cols-3 gap-4 mb-4">
+                                <div class="p-4 bg-pink-500/10 rounded-lg">
+                                    <h5 class="font-semibold text-pink-300">1. Bandpass Filtering</h5>
+                                    <p class="text-sm text-gray-400">Remove frequencies outside human speech range</p>
+                                </div>
+                                <div class="p-4 bg-pink-500/10 rounded-lg">
+                                    <h5 class="font-semibold text-pink-300">2. Spectral Subtraction</h5>
+                                    <p class="text-sm text-gray-400">Identify and remove background noise patterns</p>
+                                </div>
+                                <div class="p-4 bg-pink-500/10 rounded-lg">
+                                    <h5 class="font-semibold text-pink-300">3. Adaptive Gain</h5>
+                                    <p class="text-sm text-gray-400">Normalize audio levels for optimal processing</p>
+                                </div>
+                            </div>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Configuration Options</h4>
+                            <pre><code class="language-json">{
+  "type": "configure",
+  "config": {
+    "noise_reduction": true,
+    "noise_reduction_level": "moderate", // "light", "moderate", "aggressive"
+    "preserve_speech_quality": true
+  }
+}</code></pre>
+                            
+                            <h4 class="text-lg font-semibold mb-3">Benefits</h4>
+                            <ul class="text-sm text-gray-300 space-y-1">
+                                <li>• Improved accuracy in noisy environments</li>
+                                <li>• Better performance for phone calls and recordings</li>
+                                <li>• Automatic background noise suppression</li>
+                                <li>• Preserves natural speech characteristics</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- YouTube Transcription -->
+                <section id="transcribe-youtube" class="mb-16" x-show="activeSection === 'transcribe-youtube'">
+                    <h2 class="text-3xl font-bold mb-6">YouTube Transcription</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-6">
+                        <div class="flex items-center mb-4">
+                            <span class="endpoint-badge method-post mr-3">POST</span>
+                            <code class="text-lg font-mono">/api/v1/transcribe/youtube</code>
+                        </div>
+                        <p class="text-gray-400">Transcribe YouTube videos directly by providing the video URL. Perfect for content creators, educators, and researchers.</p>
+                    </div>
+                    
+                    <!-- Request Parameters -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Request Body</h3>
+                        <div class="glass-effect rounded-xl p-6">
+                            <div class="space-y-4">
+                                <div class="border-l-4 border-blue-500 pl-4">
+                                    <h4 class="font-semibold text-blue-400 mb-1">url <span class="text-red-400">*</span></h4>
+                                    <p class="text-sm text-gray-400 mb-2">YouTube video URL to transcribe</p>
+                                    <p class="text-xs text-gray-500">Type: <code>string</code> | Format: <code>https://youtube.com/watch?v=... or https://youtu.be/...</code></p>
+                                </div>
+                                <div class="border-l-4 border-gray-600 pl-4">
+                                    <h4 class="font-semibold text-gray-300 mb-1">language</h4>
+                                    <p class="text-sm text-gray-400 mb-2">Expected language code (optional, auto-detects if not provided)</p>
+                                    <p class="text-xs text-gray-500">Type: <code>string</code> | Default: <code>auto</code> | Examples: <code>en</code>, <code>es</code>, <code>fr</code></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Code Examples -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Code Examples</h3>
+                        <div class="grid gap-6">
+                            <!-- cURL -->
+                            <div class="glass-effect rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-semibold flex items-center">
+                                        <i data-lucide="terminal" class="w-4 h-4 mr-2"></i>
+                                        cURL
+                                    </h4>
+                                </div>
+                                <div class="code-block relative">
+                                    <button @click="copyCode('youtube-curl')" class="copy-btn">
+                                        <span x-text="copiedCode === 'youtube-curl' ? 'Copied!' : 'Copy'"></span>
+                                    </button>
+                                    <pre><code class="language-bash">curl -X POST http://localhost:8000/api/v1/transcribe/youtube \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+    "language": "auto"
+  }'</code></pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Python -->
+                            <div class="glass-effect rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-semibold flex items-center">
+                                        <i data-lucide="code" class="w-4 h-4 mr-2"></i>
+                                        Python
+                                    </h4>
+                                </div>
+                                <div class="code-block relative">
+                                    <button @click="copyCode('youtube-python')" class="copy-btn">
+                                        <span x-text="copiedCode === 'youtube-python' ? 'Copied!' : 'Copy'"></span>
+                                    </button>
+                                    <pre><code class="language-python">import httpx
+import asyncio
+
+async def transcribe_youtube(url):
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:8000/api/v1/transcribe/youtube",
+            headers={"Authorization": "Bearer YOUR_API_KEY"},
+            json={"url": url, "language": "auto"},
+            timeout=300.0  # YouTube videos may take longer
+        )
+        return response.json()
+
+# Usage
+result = await transcribe_youtube("https://youtube.com/watch?v=dQw4w9WgXcQ")
+print(f"Transcript: {result['transcription']['text']}")</code></pre>
+                                </div>
+                            </div>
+                            
+                            <!-- JavaScript -->
+                            <div class="glass-effect rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-semibold flex items-center">
+                                        <i data-lucide="globe" class="w-4 h-4 mr-2"></i>
+                                        JavaScript
+                                    </h4>
+                                </div>
+                                <div class="code-block relative">
+                                    <button @click="copyCode('youtube-js')" class="copy-btn">
+                                        <span x-text="copiedCode === 'youtube-js' ? 'Copied!' : 'Copy'"></span>
+                                    </button>
+                                    <pre><code class="language-javascript">const transcribeYoutube = async (url) => {
+  const response = await fetch('http://localhost:8000/api/v1/transcribe/youtube', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      url: url,
+      language: 'auto'
+    })
+  });
+  
+  return await response.json();
+};
+
+// Usage
+const result = await transcribeYoutube('https://youtube.com/watch?v=dQw4w9WgXcQ');
+console.log('Transcript:', result.transcription.text);</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Response -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Response</h3>
+                        <div class="glass-effect rounded-xl p-6">
+                            <div class="code-block relative">
+                                <button @click="copyCode('youtube-response')" class="copy-btn">
+                                    <span x-text="copiedCode === 'youtube-response' ? 'Copied!' : 'Copy'"></span>
+                                </button>
+                                <pre><code class="language-json">{
+  "status": "success",
+  "transcription": {
+    "id": "yt_abcd1234efgh5678",
+    "text": "Never gonna give you up, never gonna let you down...",
+    "language": "en",
+    "duration": 212.5,
+    "confidence": 0.94,
+    "word_count": 156,
+    "video_info": {
+      "title": "Rick Astley - Never Gonna Give You Up",
+      "duration": "3:32",
+      "channel": "Rick Astley"
+    },
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 3.5,
+        "text": "We're no strangers to love"
+      }
+    ],
+    "processing_time": 15.3
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Important Notes -->
+                    <div class="bg-yellow-900/30 border border-yellow-600/30 rounded-xl p-6">
+                        <h3 class="text-lg font-semibold mb-3 text-yellow-400">⚠️ Important Notes</h3>
+                        <ul class="space-y-2 text-sm text-yellow-200">
+                            <li>• YouTube videos are downloaded temporarily and deleted after processing</li>
+                            <li>• Processing time varies based on video length (typically 0.1x real-time)</li>
+                            <li>• Maximum video length: 60 minutes</li>
+                            <li>• Supports both youtube.com and youtu.be URLs</li>
+                            <li>• Age-restricted or private videos may fail</li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <!-- WebSocket Streaming -->
+                <section id="websocket-streaming" class="mb-16" x-show="activeSection === 'websocket-streaming'">
+                    <h2 class="text-3xl font-bold mb-6">WebSocket Real-time Streaming</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-6">
+                        <div class="flex items-center mb-4">
+                            <span class="endpoint-badge bg-green-500/20 text-green-400 mr-3">WS</span>
+                            <code class="text-lg font-mono">ws://localhost:8000/ws/v1/transcribe</code>
+                        </div>
+                        <p class="text-gray-400">Real-time audio streaming for live transcription with speaker diarization and language detection. Perfect for live captioning, call monitoring, and interactive applications.</p>
+                    </div>
+                    
+                    <!-- Connection Parameters -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Connection Parameters</h3>
+                        <div class="glass-effect rounded-xl p-6">
+                            <div class="space-y-4">
+                                <div class="border-l-4 border-green-500 pl-4">
+                                    <h4 class="font-semibold text-green-400 mb-1">api_key <span class="text-red-400">*</span></h4>
+                                    <p class="text-sm text-gray-400 mb-2">Your API key for authentication</p>
+                                    <p class="text-xs text-gray-500">Pass as query parameter: <code>?api_key=YOUR_API_KEY</code></p>
+                                </div>
+                                <div class="border-l-4 border-gray-600 pl-4">
+                                    <h4 class="font-semibold text-gray-300 mb-1">sample_rate</h4>
+                                    <p class="text-sm text-gray-400 mb-2">Audio sample rate in Hz</p>
+                                    <p class="text-xs text-gray-500">Default: <code>16000</code> | Supported: <code>8000, 16000, 22050, 44100</code></p>
+                                </div>
+                                <div class="border-l-4 border-gray-600 pl-4">
+                                    <h4 class="font-semibold text-gray-300 mb-1">language</h4>
+                                    <p class="text-sm text-gray-400 mb-2">Expected language code</p>
+                                    <p class="text-xs text-gray-500">Default: <code>auto</code> | Examples: <code>en</code>, <code>es</code>, <code>fr</code></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Protocol Flow -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Protocol Flow</h3>
+                        <div class="grid gap-4">
+                            <div class="glass-effect rounded-xl p-4">
+                                <h4 class="font-semibold mb-2 text-blue-400">1. Connect & Configure</h4>
+                                <p class="text-sm text-gray-400 mb-3">Send configuration message after connecting</p>
+                                <div class="code-block relative">
+                                    <pre><code class="language-json">{
+  "type": "configure",
+  "config": {
+    "encoding": "linear16",
+    "sample_rate": 16000,
+    "language": "auto",
+    "interim_results": true,
+    "speaker_diarization": true,
+    "language_detection": true,
+    "noise_reduction": true,
+    "max_speakers": 5
+  }
+}</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="glass-effect rounded-xl p-4">
+                                <h4 class="font-semibold mb-2 text-green-400">2. Stream Audio</h4>
+                                <p class="text-sm text-gray-400 mb-3">Send audio chunks as base64-encoded data</p>
+                                <div class="code-block relative">
+                                    <pre><code class="language-json">{
+  "type": "audio",
+  "data": "base64_encoded_audio_chunk",
+  "timestamp": 1672531200000
+}</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="glass-effect rounded-xl p-4">
+                                <h4 class="font-semibold mb-2 text-purple-400">3. Receive Results</h4>
+                                <p class="text-sm text-gray-400 mb-3">Get real-time transcription updates</p>
+                                <div class="code-block relative">
+                                    <pre><code class="language-json">{
+  "type": "transcription",
+  "text": "Hello, this is a partial result",
+  "is_final": false,
+  "confidence": 0.87,
+  "start_time": 1.2,
+  "end_time": 2.5,
+  "speaker": "speaker_1",
+  "language": "en"
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Code Examples -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Implementation Examples</h3>
+                        <div class="grid gap-6">
+                            <!-- JavaScript Browser -->
+                            <div class="glass-effect rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-semibold flex items-center">
+                                        <i data-lucide="globe" class="w-4 h-4 mr-2"></i>
+                                        JavaScript (Browser)
+                                    </h4>
+                                </div>
+                                <div class="code-block relative">
+                                    <button @click="copyCode('ws-js')" class="copy-btn">
+                                        <span x-text="copiedCode === 'ws-js' ? 'Copied!' : 'Copy'"></span>
+                                    </button>
+                                    <pre><code class="language-javascript">// Connect to WebSocket
+const ws = new WebSocket('ws://localhost:8000/ws/v1/transcribe?api_key=YOUR_API_KEY');
+
+ws.onopen = () => {
+  console.log('Connected to VoiceForge');
+  
+  // Send configuration
+  ws.send(JSON.stringify({
+    type: 'configure',
+    config: {
+      encoding: 'linear16',
+      sample_rate: 16000,
+      language: 'auto',
+      interim_results: true,
+      speaker_diarization: true
+    }
+  }));
+};
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  if (message.type === 'transcription') {
+    console.log(`${message.is_final ? '[FINAL]' : '[PARTIAL]'} ${message.text}`);
+  }
+};
+
+// Stream microphone audio
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+const mediaRecorder = new MediaRecorder(stream);
+
+mediaRecorder.ondataavailable = (event) => {
+  if (ws.readyState === WebSocket.OPEN) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      ws.send(JSON.stringify({
+        type: 'audio',
+        data: base64,
+        timestamp: Date.now()
+      }));
+    };
+    reader.readAsDataURL(event.data);
+  }
+};
+
+mediaRecorder.start(100); // Send chunks every 100ms</code></pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Python -->
+                            <div class="glass-effect rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-semibold flex items-center">
+                                        <i data-lucide="code" class="w-4 h-4 mr-2"></i>
+                                        Python
+                                    </h4>
+                                </div>
+                                <div class="code-block relative">
+                                    <button @click="copyCode('ws-python')" class="copy-btn">
+                                        <span x-text="copiedCode === 'ws-python' ? 'Copied!' : 'Copy'"></span>
+                                    </button>
+                                    <pre><code class="language-python">import asyncio
+import websockets
+import json
+import base64
+import pyaudio
+
+async def stream_transcription():
+    uri = "ws://localhost:8000/ws/v1/transcribe?api_key=YOUR_API_KEY"
+    
+    async with websockets.connect(uri) as websocket:
+        # Send configuration
+        config = {
+            "type": "configure",
+            "config": {
+                "encoding": "linear16",
+                "sample_rate": 16000,
+                "language": "auto",
+                "interim_results": True,
+                "speaker_diarization": True
+            }
+        }
+        await websocket.send(json.dumps(config))
+        
+        # Setup audio streaming
+        audio = pyaudio.PyAudio()
+        stream = audio.open(
+            format=pyaudio.paInt16,
+            channels=1,
+            rate=16000,
+            input=True,
+            frames_per_buffer=1024
+        )
+        
+        # Start streaming
+        async def send_audio():
+            while True:
+                data = stream.read(1024, exception_on_overflow=False)
+                base64_data = base64.b64encode(data).decode('utf-8')
+                await websocket.send(json.dumps({
+                    "type": "audio",
+                    "data": base64_data
+                }))
+                await asyncio.sleep(0.1)
+        
+        async def receive_results():
+            async for message in websocket:
+                data = json.loads(message)
+                if data['type'] == 'transcription':
+                    status = 'FINAL' if data['is_final'] else 'PARTIAL'
+                    print(f"[{status}] {data['text']}")
+        
+        # Run both tasks concurrently
+        await asyncio.gather(send_audio(), receive_results())
+
+asyncio.run(stream_transcription())</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Features -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-4">Advanced Features</h3>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="glass-effect rounded-xl p-6">
+                                <h4 class="font-semibold mb-3 text-purple-400">🎤 Speaker Diarization</h4>
+                                <p class="text-gray-400 text-sm mb-3">Automatically identify and separate different speakers in real-time.</p>
+                                <div class="code-block relative">
+                                    <pre><code class="language-json">{
+  "text": "Hello there!",
+  "speaker": "speaker_1",
+  "speaker_confidence": 0.92
+}</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="glass-effect rounded-xl p-6">
+                                <h4 class="font-semibold mb-3 text-blue-400">🌐 Language Detection</h4>
+                                <p class="text-gray-400 text-sm mb-3">Automatically detect language changes during conversation.</p>
+                                <div class="code-block relative">
+                                    <pre><code class="language-json">{
+  "text": "Hola amigos",
+  "language": "es",
+  "language_confidence": 0.95
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Tips -->
+                    <div class="bg-blue-900/30 border border-blue-600/30 rounded-xl p-6">
+                        <h3 class="text-lg font-semibold mb-3 text-blue-400">🚀 Performance Tips</h3>
+                        <ul class="space-y-2 text-sm text-blue-200">
+                            <li>• Send audio chunks every 100-500ms for optimal latency</li>
+                            <li>• Use 16kHz sample rate for best accuracy vs performance balance</li>
+                            <li>• Enable VAD (Voice Activity Detection) to reduce processing</li>
+                            <li>• Keep WebSocket connections alive with periodic ping messages</li>
+                            <li>• Process interim results for better user experience</li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <!-- User Information -->
+                <section id="user-info" class="mb-16" x-show="activeSection === 'user-info'">
+                    <h2 class="text-3xl font-bold mb-6">User Information</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-6">
+                        <div class="flex items-center mb-4">
+                            <span class="endpoint-badge method-get mr-3">GET</span>
+                            <code class="text-lg font-mono">/api/v1/user/info</code>
+                        </div>
+                        <p class="text-gray-400">Retrieve information about the current authenticated user account.</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Request Headers</h3>
+                            <pre><code class="language-bash">Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json</code></pre>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Response</h3>
+                            <pre><code class="language-json">{
+  "id": "user_123",
+  "email": "developer@example.com",
+  "full_name": "John Developer",
+  "company": "Tech Corp",
+  "plan": {
+    "name": "Professional",
+    "limits": {
+      "monthly_minutes": 50000,
+      "concurrent_connections": 10
+    }
+  },
+  "created_at": "2025-01-15T10:30:00Z",
+  "verified": true
+}</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-effect rounded-xl p-6">
+                        <h3 class="text-lg font-semibold mb-3">Account Status Fields</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li><strong>plan.name:</strong> Current subscription plan</li>
+                            <li><strong>plan.limits:</strong> Usage limits for your plan</li>
+                            <li><strong>verified:</strong> Email verification status</li>
+                            <li><strong>created_at:</strong> Account creation date</li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <!-- Usage Statistics -->
+                <section id="usage-stats" class="mb-16" x-show="activeSection === 'usage-stats'">
+                    <h2 class="text-3xl font-bold mb-6">Usage Statistics</h2>
+                    
+                    <div class="glass-effect rounded-xl p-6 mb-6">
+                        <div class="flex items-center mb-4">
+                            <span class="endpoint-badge method-get mr-3">GET</span>
+                            <code class="text-lg font-mono">/api/v1/usage/stats</code>
+                        </div>
+                        <p class="text-gray-400">Get detailed usage statistics for your API consumption and billing information.</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Query Parameters</h3>
+                            <pre><code class="language-bash">GET /api/v1/usage/stats?period=month&start_date=2025-01-01</code></pre>
+                            <ul class="text-sm text-gray-400 mt-3 space-y-1">
+                                <li><strong>period:</strong> day, week, month, year</li>
+                                <li><strong>start_date:</strong> ISO 8601 date (optional)</li>
+                                <li><strong>end_date:</strong> ISO 8601 date (optional)</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Response</h3>
+                            <pre><code class="language-json">{
+  "period": "month",
+  "start_date": "2025-01-01",
+  "end_date": "2025-01-31",
+  "usage": {
+    "total_minutes": 12450,
+    "total_requests": 850,
+    "websocket_connections": 45,
+    "features_used": {
+      "speaker_diarization": 120,
+      "language_detection": 300,
+      "noise_reduction": 450
+    }
+  },
+  "limits": {
+    "monthly_minutes": 50000,
+    "remaining_minutes": 37550
+  },
+  "billing": {
+    "current_charge": 0.00,
+    "overage_charge": 0.00,
+    "next_reset": "2025-02-01T00:00:00Z"
+  }
+}</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="glass-effect rounded-xl p-6">
+                            <h4 class="text-lg font-semibold mb-3">Usage Metrics</h4>
+                            <ul class="text-sm text-gray-300 space-y-1">
+                                <li>Total processing minutes</li>
+                                <li>API request count</li>
+                                <li>WebSocket connections</li>
+                                <li>Feature usage breakdown</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6">
+                            <h4 class="text-lg font-semibold mb-3">Plan Limits</h4>
+                            <ul class="text-sm text-gray-300 space-y-1">
+                                <li>Monthly minute allowance</li>
+                                <li>Remaining quota</li>
+                                <li>Concurrent connection limit</li>
+                                <li>Rate limiting status</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6">
+                            <h4 class="text-lg font-semibold mb-3">Billing Info</h4>
+                            <ul class="text-sm text-gray-300 space-y-1">
+                                <li>Current period charges</li>
+                                <li>Overage fees</li>
+                                <li>Next billing cycle</li>
+                                <li>Payment status</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Error Codes -->
+                <section id="error-codes" class="mb-16" x-show="activeSection === 'error-codes'">
+                    <h2 class="text-3xl font-bold mb-6">Error Codes</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="glass-effect rounded-xl p-6">
+                            <div class="flex items-center mb-3">
+                                <span class="endpoint-badge method-delete mr-3">400</span>
+                                <h3 class="text-lg font-semibold">Bad Request</h3>
+                            </div>
+                            <p class="text-gray-400">Invalid request format or missing required parameters.</p>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6">
+                            <div class="flex items-center mb-3">
+                                <span class="endpoint-badge method-delete mr-3">401</span>
+                                <h3 class="text-lg font-semibold">Unauthorized</h3>
+                            </div>
+                            <p class="text-gray-400">Invalid or missing API key.</p>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6">
+                            <div class="flex items-center mb-3">
+                                <span class="endpoint-badge method-delete mr-3">413</span>
+                                <h3 class="text-lg font-semibold">File Too Large</h3>
+                            </div>
+                            <p class="text-gray-400">Audio file exceeds the maximum size limit (10MB).</p>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6">
+                            <div class="flex items-center mb-3">
+                                <span class="endpoint-badge method-delete mr-3">429</span>
+                                <h3 class="text-lg font-semibold">Rate Limited</h3>
+                            </div>
+                            <p class="text-gray-400">Too many requests. Please wait before making another request.</p>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6">
+                            <div class="flex items-center mb-3">
+                                <span class="endpoint-badge method-delete mr-3">500</span>
+                                <h3 class="text-lg font-semibold">Internal Server Error</h3>
+                            </div>
+                            <p class="text-gray-400">Something went wrong on our end. Please try again later.</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Troubleshooting -->
+                <section id="troubleshooting" class="mb-16" x-show="activeSection === 'troubleshooting'">
+                    <h2 class="text-3xl font-bold mb-6">Troubleshooting</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="glass-effect rounded-xl p-6">
+                            <h3 class="text-xl font-semibold mb-4 text-red-400">Common Issues</h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="text-lg font-semibold mb-2">Authentication Errors (401)</h4>
+                                    <p class="text-gray-400 mb-3">API key is invalid, expired, or missing.</p>
+                                    <ul class="text-sm text-gray-300 space-y-1 ml-4">
+                                        <li>• Verify your API key is correct and active</li>
+                                        <li>• Check that you're including the Authorization header</li>
+                                        <li>• Ensure you're using the correct format: <code class="text-blue-400">Authorization: Bearer YOUR_API_KEY</code></li>
+                                        <li>• Regenerate your API key if needed in the Developer Portal</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold mb-2">File Upload Issues</h4>
+                                    <p class="text-gray-400 mb-3">Audio file cannot be processed or is rejected.</p>
+                                    <ul class="text-sm text-gray-300 space-y-1 ml-4">
+                                        <li>• Supported formats: MP3, WAV, M4A, FLAC, OGG</li>
+                                        <li>• Maximum file size: 25MB</li>
+                                        <li>• Audio should be at least 1 second long</li>
+                                        <li>• Use proper Content-Type header: <code class="text-blue-400">multipart/form-data</code></li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold mb-2">WebSocket Connection Issues</h4>
+                                    <p class="text-gray-400 mb-3">Cannot connect to or maintain WebSocket streaming.</p>
+                                    <ul class="text-sm text-gray-300 space-y-1 ml-4">
+                                        <li>• Ensure you're connecting to <code class="text-blue-400">wss://api.voiceforge.ai</code></li>
+                                        <li>• Include your API key in the query parameters</li>
+                                        <li>• Handle connection drops with automatic reconnection</li>
+                                        <li>• Send keep-alive pings every 30 seconds</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold mb-2">Rate Limiting (429)</h4>
+                                    <p class="text-gray-400 mb-3">Too many requests sent in a short time period.</p>
+                                    <ul class="text-sm text-gray-300 space-y-1 ml-4">
+                                        <li>• Wait before retrying (check Retry-After header)</li>
+                                        <li>• Implement exponential backoff in your client</li>
+                                        <li>• Consider upgrading your plan for higher limits</li>
+                                        <li>• Batch multiple files instead of individual requests</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="text-lg font-semibold mb-2">Poor Transcription Quality</h4>
+                                    <p class="text-gray-400 mb-3">Transcription accuracy is lower than expected.</p>
+                                    <ul class="text-sm text-gray-300 space-y-1 ml-4">
+                                        <li>• Use higher quality audio (16kHz+ sample rate)</li>
+                                        <li>• Minimize background noise and echo</li>
+                                        <li>• Enable noise reduction feature</li>
+                                        <li>• Specify the correct language parameter</li>
+                                        <li>• Use custom vocabulary for domain-specific terms</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="glass-effect rounded-xl p-6">
+                                <h3 class="text-lg font-semibold mb-4">Debug Tips</h3>
+                                <ul class="text-sm text-gray-300 space-y-2">
+                                    <li>• Enable verbose logging in your application</li>
+                                    <li>• Test with small audio files first</li>
+                                    <li>• Use our playground to validate API behavior</li>
+                                    <li>• Check our status page for service issues</li>
+                                    <li>• Monitor response times and error rates</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="glass-effect rounded-xl p-6">
+                                <h3 class="text-lg font-semibold mb-4">Performance Optimization</h3>
+                                <ul class="text-sm text-gray-300 space-y-2">
+                                    <li>• Use streaming for real-time applications</li>
+                                    <li>• Compress audio files before upload</li>
+                                    <li>• Implement client-side caching</li>
+                                    <li>• Process audio in smaller chunks</li>
+                                    <li>• Use CDN for file distribution</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-effect rounded-xl p-6 bg-amber-500/10 border-amber-500/30">
+                            <h3 class="text-lg font-semibold mb-3 text-amber-400">Still Need Help?</h3>
+                            <p class="text-amber-200/80 mb-4">If you're still experiencing issues after trying these solutions:</p>
+                            <ul class="text-sm text-amber-200/80 space-y-1">
+                                <li>• Email us at <a href="mailto:support@voiceforge.ai" class="text-amber-300 hover:text-amber-200">support@voiceforge.ai</a> with your API key and error details</li>
+                                <li>• Check our <a href="/developer" class="text-amber-300 hover:text-amber-200">Developer Portal</a> for account-specific issues</li>
+                                <li>• Include request IDs and timestamps for faster resolution</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Support -->
+                <section class="mb-16">
+                    <div class="glass-effect rounded-xl p-8 text-center">
+                        <div class="floating mb-6">
+                            <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto">
+                                <i data-lucide="help-circle" class="w-8 h-8 text-white"></i>
+                            </div>
+                        </div>
+                        <h2 class="text-2xl font-bold mb-4">Need Help?</h2>
+                        <p class="text-gray-400 mb-6">Our team is here to help you integrate VoiceForge into your application.</p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="/developer" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:from-purple-600 hover:to-pink-600 transition">
+                                <i data-lucide="user" class="w-4 h-4 mr-2"></i>
+                                Developer Portal
+                            </a>
+                            <a href="mailto:support@voiceforge.ai" class="inline-flex items-center px-6 py-3 glass-effect rounded-lg hover:bg-white/10 transition">
+                                <i data-lucide="mail" class="w-4 h-4 mr-2"></i>
+                                Contact Support
+                            </a>
+                        </div>
+                    </div>
+                </section>
+                
+            </div>
+        </main>
+    </div>
+    
+    <!-- Scripts -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Copy code functionality
+        function copyCode(code) {
+            navigator.clipboard.writeText(code.replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/\\n/g, '\n')).then(() => {
+                // Show copied feedback
+                Alpine.store('docs').copiedCode = Date.now();
+                setTimeout(() => {
+                    Alpine.store('docs').copiedCode = '';
+                }, 2000);
+            });
+        }
+        
+        // Smooth scroll to sections and intersection observer for active section tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('a[href^="#"]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+            
+            // Intersection Observer for active section tracking
+            const observerOptions = {
+                root: null,
+                rootMargin: '-20% 0px -70% 0px', // Trigger when section is 20% from top
+                threshold: 0
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const sectionId = entry.target.id;
+                        if (sectionId) {
+                            // Update active section in Alpine.js data
+                            const bodyEl = document.querySelector('body[x-data]');
+                            if (bodyEl && bodyEl._x_dataStack) {
+                                bodyEl._x_dataStack[0].activeSection = sectionId;
+                            }
+                        }
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe all sections
+            const sections = document.querySelectorAll('section[id], div[id]');
+            sections.forEach(section => observer.observe(section));
+        });
+        
+        // Handle URL routing for documentation sections
+        function handleDocumentationRouting() {
+            const path = window.location.pathname;
+            const hash = window.location.hash.substring(1); // Remove #
+            
+            // Map URL paths to section IDs
+            const pathToSection = {
+                '/docs/quickstart': 'quick-start',
+                '/docs/authentication': 'api-keys',
+                '/docs/streaming': 'advanced-features',
+                '/docs/phase3': 'advanced-features',
+                '/docs/sdk/javascript': 'javascript-examples',
+                '/docs/sdk/python': 'python-examples',
+                '/docs/sdk/react': 'javascript-examples',
+                '/docs/sdk/nodejs': 'javascript-examples',
+                '/docs/api/websocket': 'websocket-streaming',
+                '/docs/api/youtube': 'transcribe-youtube',
+                '/docs/api/rest': 'transcribe',
+                '/docs/api/features': 'advanced-features',
+                '/docs/api/errors': 'error-codes'
+            };
+            
+            let targetSection = null;
+            
+            // Check if we have a direct hash
+            if (hash && document.getElementById(hash)) {
+                targetSection = hash;
+            }
+            // Check if we have a mapped path
+            else if (pathToSection[path]) {
+                targetSection = pathToSection[path];
+                
+                // Update the URL to include the fragment
+                history.replaceState(null, null, '/docs#' + targetSection);
+            }
+            
+            // If we have a target section, activate it
+            if (targetSection) {
+                setTimeout(() => {
+                    const bodyEl = document.querySelector('body[x-data]');
+                    if (bodyEl && bodyEl._x_dataStack) {
+                        bodyEl._x_dataStack[0].activeSection = targetSection;
+                        
+                        // Expand the appropriate sidebar section
+                        if (targetSection.includes('examples')) {
+                            bodyEl._x_dataStack[0].expandedSections['examples'] = true;
+                        } else if (['speaker-diarization', 'language-detection', 'noise-reduction', 'advanced-features'].includes(targetSection)) {
+                            bodyEl._x_dataStack[0].expandedSections['advanced'] = true;
+                        } else if (['transcribe', 'transcribe-youtube', 'websocket-streaming', 'user-info', 'usage-stats'].includes(targetSection)) {
+                            bodyEl._x_dataStack[0].expandedSections['endpoints'] = true;
+                        } else if (['api-keys', 'oauth'].includes(targetSection)) {
+                            bodyEl._x_dataStack[0].expandedSections['authentication'] = true;
+                        } else if (['error-codes', 'troubleshooting'].includes(targetSection)) {
+                            bodyEl._x_dataStack[0].expandedSections['errors'] = true;
+                        }
+                    }
+                    
+                    // Scroll to the section
+                    const targetElement = document.getElementById(targetSection);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 100);
+            }
+        }
+        
+        // Handle routing on page load and URL changes
+        document.addEventListener('DOMContentLoaded', handleDocumentationRouting);
+        window.addEventListener('hashchange', handleDocumentationRouting);
+        
+        // Create Alpine store for global state
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('docs', {
+                copiedCode: ''
+            });
+            
+        });
+    </script>
+</body>
+</html>

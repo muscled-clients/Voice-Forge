@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voiceforge-stt
+  labels:
+    name: voiceforge-stt
+    app.kubernetes.io/name: voiceforge
+    app.kubernetes.io/component: namespace
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: voiceforge-quota
+  namespace: voiceforge-stt
+spec:
+  hard:
+    requests.cpu: "20"
+    requests.memory: 40Gi
+    limits.cpu: "40"
+    limits.memory: 80Gi
+    persistentvolumeclaims: "10"
+    services: "10"
+    secrets: "20"
+    configmaps: "20"
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: voiceforge-network-policy
+  namespace: voiceforge-stt
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: voiceforge
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: voiceforge
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 6379
+    - protocol: TCP
+      port: 5432
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: voiceforge

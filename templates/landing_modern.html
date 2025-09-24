@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceForge - Next-Generation Speech Recognition API</title>
+    <meta name="description" content="Transform audio into text with lightning speed. 100+ languages, 99% accuracy, enterprise-grade API.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js for interactions -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Animations -->
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide@latest/dist/lucide.css">
+    
+    <style>
+        :root {
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-mesh: radial-gradient(at 40% 20%, hsla(28, 100%, 74%, 1) 0px, transparent 50%),
+                            radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 1) 0px, transparent 50%),
+                            radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 1) 0px, transparent 50%),
+                            radial-gradient(at 80% 50%, hsla(340, 100%, 76%, 1) 0px, transparent 50%),
+                            radial-gradient(at 0% 100%, hsla(22, 100%, 77%, 1) 0px, transparent 50%),
+                            radial-gradient(at 80% 100%, hsla(242, 100%, 70%, 1) 0px, transparent 50%),
+                            radial-gradient(at 0% 0%, hsla(343, 100%, 76%, 1) 0px, transparent 50%);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .gradient-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .mesh-gradient {
+            background: var(--gradient-mesh);
+            filter: blur(100px);
+            opacity: 0.5;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .animated-border {
+            position: relative;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 300% 300%;
+            animation: gradient-animation 4s ease infinite;
+        }
+        
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .pulse-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-white overflow-x-hidden" x-data="{ 
+    mobileMenu: false, 
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    activeTab: 'curl',
+    pricingPeriod: 'monthly'
+}">
+    
+    <!-- Animated Background -->
+    <div class="fixed inset-0 -z-10">
+        <div class="absolute inset-0 mesh-gradient"></div>
+        <div class="absolute inset-0 bg-gray-950 opacity-90"></div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="fixed w-full top-0 z-50 glass-effect">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <span class="text-white font-bold text-xl">VF</span>
+                    </div>
+                    <span class="text-xl font-bold">VoiceForge</span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="hover:text-purple-400 transition">Features</a>
+                    <a href="#pricing" class="hover:text-purple-400 transition">Pricing</a>
+                    <a href="/docs" class="hover:text-purple-400 transition">Documentation</a>
+                    <a href="#playground" class="hover:text-purple-400 transition">Playground</a>
+                    <div class="flex items-center space-x-4">
+                        <a href="/developer" class="hover:text-purple-400 transition">Sign In</a>
+                        <a href="/developer" class="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition">
+                            Get Started
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button @click="mobileMenu = !mobileMenu" class="md:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div x-show="mobileMenu" x-transition class="md:hidden glass-effect">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#features" class="block px-3 py-2 hover:bg-gray-800 rounded">Features</a>
+                <a href="#pricing" class="block px-3 py-2 hover:bg-gray-800 rounded">Pricing</a>
+                <a href="/docs" class="block px-3 py-2 hover:bg-gray-800 rounded">Documentation</a>
+                <a href="/developer" class="block px-3 py-2 hover:bg-gray-800 rounded">Developer Portal</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center px-4 pt-20">
+        <div class="max-w-7xl mx-auto text-center" data-aos="fade-up">
+            <!-- Badge -->
+            <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full glass-effect mb-8">
+                <span class="w-2 h-2 bg-green-400 rounded-full pulse-dot"></span>
+                <span class="text-sm">API Status: All Systems Operational</span>
+            </div>
+            
+            <!-- Main Heading -->
+            <h1 class="text-5xl md:text-7xl font-bold mb-6">
+                Transform Speech to Text<br>
+                <span class="gradient-text">at Lightning Speed</span>
+            </h1>
+            
+            <!-- Subheading -->
+            <p class="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto">
+                Industry-leading accuracy with 100+ languages. Scale from prototype to production 
+                with our enterprise-grade Speech Recognition API.
+            </p>
+            
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <a href="/developer" class="px-8 py-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition text-lg font-semibold">
+                    Start Free Trial →
+                </a>
+                <a href="#playground" class="px-8 py-4 rounded-lg glass-effect hover:bg-white/10 transition text-lg font-semibold">
+                    Try Live Demo
+                </a>
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="text-3xl font-bold gradient-text">99.5%</div>
+                    <div class="text-gray-400">Accuracy</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold gradient-text">100+</div>
+                    <div class="text-gray-400">Languages</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold gradient-text"><150ms</div>
+                    <div class="text-gray-400">Latency</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold gradient-text">10M+</div>
+                    <div class="text-gray-400">API Calls/Day</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section id="features" class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    Why Developers Choose <span class="gradient-text">VoiceForge</span>
+                </h2>
+                <p class="text-xl text-gray-400">Built for scale, designed for simplicity</p>
+            </div>
+            
+            <!-- Feature Grid -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="glass-effect rounded-2xl p-8 hover-lift" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Lightning Fast</h3>
+                    <p class="text-gray-400">Sub-150ms latency with parallel processing. Real-time transcription for live applications.</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="glass-effect rounded-2xl p-8 hover-lift" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Global Language Support</h3>
+                    <p class="text-gray-400">100+ languages with accent detection. Automatic language identification included.</p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="glass-effect rounded-2xl p-8 hover-lift" data-aos="fade-up" data-aos-delay="300">
+                    <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Enterprise Security</h3>
+                    <p class="text-gray-400">SOC2 compliant with end-to-end encryption. GDPR ready with data residency options.</p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="glass-effect rounded-2xl p-8 hover-lift" data-aos="fade-up" data-aos-delay="400">
+                    <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Developer Friendly</h3>
+                    <p class="text-gray-400">RESTful API with SDKs for Python, JavaScript, Go, and more. Comprehensive documentation.</p>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="glass-effect rounded-2xl p-8 hover-lift" data-aos="fade-up" data-aos-delay="500">
+                    <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Real-time Analytics</h3>
+                    <p class="text-gray-400">Monitor usage, performance, and costs in real-time. Custom alerts and reporting.</p>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="glass-effect rounded-2xl p-8 hover-lift" data-aos="fade-up" data-aos-delay="600">
+                    <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Transparent Pricing</h3>
+                    <p class="text-gray-400">Pay only for what you use. No hidden fees. Generous free tier to get started.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Code Examples Section -->
+    <section class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    Integration in <span class="gradient-text">Minutes</span>
+                </h2>
+                <p class="text-xl text-gray-400">Get started with just a few lines of code</p>
+            </div>
+            
+            <!-- Code Tabs -->
+            <div class="max-w-4xl mx-auto" data-aos="fade-up">
+                <!-- Tab Headers -->
+                <div class="flex space-x-2 mb-6 overflow-x-auto">
+                    <button @click="activeTab = 'curl'" 
+                            :class="activeTab === 'curl' ? 'bg-purple-500' : 'glass-effect'" 
+                            class="px-4 py-2 rounded-lg font-mono text-sm transition">
+                        cURL
+                    </button>
+                    <button @click="activeTab = 'python'" 
+                            :class="activeTab === 'python' ? 'bg-purple-500' : 'glass-effect'" 
+                            class="px-4 py-2 rounded-lg font-mono text-sm transition">
+                        Python
+                    </button>
+                    <button @click="activeTab = 'javascript'" 
+                            :class="activeTab === 'javascript' ? 'bg-purple-500' : 'glass-effect'" 
+                            class="px-4 py-2 rounded-lg font-mono text-sm transition">
+                        JavaScript
+                    </button>
+                    <button @click="activeTab = 'go'" 
+                            :class="activeTab === 'go' ? 'bg-purple-500' : 'glass-effect'" 
+                            class="px-4 py-2 rounded-lg font-mono text-sm transition">
+                        Go
+                    </button>
+                </div>
+                
+                <!-- Code Content -->
+                <div class="glass-effect rounded-2xl p-6">
+                    <!-- cURL -->
+                    <div x-show="activeTab === 'curl'" class="font-mono text-sm">
+                        <pre class="text-gray-300"><code>curl -X POST https://api.voiceforge.ai/v1/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@audio.mp3" \
+  -F "language=auto"</code></pre>
+                    </div>
+                    
+                    <!-- Python -->
+                    <div x-show="activeTab === 'python'" class="font-mono text-sm">
+                        <pre class="text-gray-300"><code>import voiceforge
+
+client = voiceforge.Client(api_key="YOUR_API_KEY")
+
+with open("audio.mp3", "rb") as file:
+    result = client.transcribe(
+        file=file,
+        language="auto"
+    )
+    
+print(result.text)</code></pre>
+                    </div>
+                    
+                    <!-- JavaScript -->
+                    <div x-show="activeTab === 'javascript'" class="font-mono text-sm">
+                        <pre class="text-gray-300"><code>import VoiceForge from 'voiceforge';
+
+const client = new VoiceForge({ apiKey: 'YOUR_API_KEY' });
+
+const result = await client.transcribe({
+  file: audioFile,
+  language: 'auto'
+});
+
+console.log(result.text);</code></pre>
+                    </div>
+                    
+                    <!-- Go -->
+                    <div x-show="activeTab === 'go'" class="font-mono text-sm">
+                        <pre class="text-gray-300"><code>package main
+
+import "github.com/voiceforge/voiceforge-go"
+
+client := voiceforge.NewClient("YOUR_API_KEY")
+
+result, err := client.Transcribe(voiceforge.TranscribeOptions{
+    File:     file,
+    Language: "auto",
+})
+
+fmt.Println(result.Text)</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    Simple, Transparent <span class="gradient-text">Pricing</span>
+                </h2>
+                <p class="text-xl text-gray-400 mb-8">Start free, scale as you grow</p>
+                
+                <!-- Billing Toggle -->
+                <div class="inline-flex items-center space-x-4 glass-effect rounded-lg p-1">
+                    <button @click="pricingPeriod = 'monthly'" 
+                            :class="pricingPeriod === 'monthly' ? 'bg-purple-500' : ''" 
+                            class="px-4 py-2 rounded-lg transition">
+                        Monthly
+                    </button>
+                    <button @click="pricingPeriod = 'yearly'" 
+                            :class="pricingPeriod === 'yearly' ? 'bg-purple-500' : ''" 
+                            class="px-4 py-2 rounded-lg transition">
+                        Yearly (Save 20%)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Pricing Cards -->
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Free Plan -->
+                <div class="glass-effect rounded-2xl p-8 hover-lift" data-aos="fade-up" data-aos-delay="100">
+                    <h3 class="text-2xl font-bold mb-2">Free</h3>
+                    <p class="text-gray-400 mb-6">Perfect for testing and prototypes</p>
+                    <div class="mb-6">
+                        <span class="text-4xl font-bold">$0</span>
+                        <span class="text-gray-400">/month</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            1,000 minutes/month
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            All languages
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Community support
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            10MB file size limit
+                        </li>
+                    </ul>
+                    <a href="/developer" class="block text-center px-6 py-3 rounded-lg glass-effect hover:bg-white/10 transition">
+                        Get Started
+                    </a>
+                </div>
+                
+                <!-- Pro Plan -->
+                <div class="glass-effect rounded-2xl p-8 hover-lift border-2 border-purple-500 relative" data-aos="fade-up" data-aos-delay="200">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="px-4 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-sm">
+                            Most Popular
+                        </span>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Pro</h3>
+                    <p class="text-gray-400 mb-6">For growing applications</p>
+                    <div class="mb-6">
+                        <span class="text-4xl font-bold" x-text="pricingPeriod === 'monthly' ? '$99' : '$79'">$99</span>
+                        <span class="text-gray-400">/month</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            10,000 minutes/month
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Priority processing
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Email support
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            100MB file size limit
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Webhooks & batch API
+                        </li>
+                    </ul>
+                    <a href="/developer" class="block text-center px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition">
+                        Start Free Trial
+                    </a>
+                </div>
+                
+                <!-- Enterprise Plan -->
+                <div class="glass-effect rounded-2xl p-8 hover-lift" data-aos="fade-up" data-aos-delay="300">
+                    <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
+                    <p class="text-gray-400 mb-6">For mission-critical applications</p>
+                    <div class="mb-6">
+                        <span class="text-4xl font-bold">Custom</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Unlimited minutes
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Dedicated infrastructure
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            24/7 phone support
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            99.99% SLA
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            On-premise deployment
+                        </li>
+                    </ul>
+                    <a href="mailto:sales@voiceforge.ai" class="block text-center px-6 py-3 rounded-lg glass-effect hover:bg-white/10 transition">
+                        Contact Sales
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Interactive Playground -->
+    <section id="playground" class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    Try <span class="gradient-text">Live Demo</span>
+                </h2>
+                <p class="text-xl text-gray-400">Upload an audio file or paste a YouTube URL to see the magic happen</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto" data-aos="fade-up">
+                <!-- Input Mode Toggle -->
+                <div class="flex justify-center mb-8">
+                    <div class="inline-flex rounded-lg glass-effect p-1">
+                        <button id="mode-file" class="px-6 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold transition">
+                            Upload File
+                        </button>
+                        <button id="mode-youtube" class="px-6 py-2 rounded-lg text-gray-300 hover:text-white font-semibold transition">
+                            YouTube URL
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Upload Area (File Mode) -->
+                <div id="file-input-area" class="glass-effect rounded-2xl p-8 mb-8">
+                    <div id="demo-upload-area" class="border-2 border-dashed border-purple-500/50 rounded-xl p-12 text-center hover:border-purple-400 transition cursor-pointer">
+                        <div class="floating">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-semibold mb-2">Drop your audio file here</h3>
+                        <p class="text-gray-400 mb-4">or click to browse</p>
+                        <p class="text-sm text-gray-500">Supports MP3, WAV, M4A, MP4, OGG, FLAC • Max 10MB</p>
+                        <input type="file" id="demo-file-input" class="hidden" accept=".mp3,.wav,.m4a,.mp4,.ogg,.flac">
+                    </div>
+                </div>
+                
+                <!-- YouTube URL Input (YouTube Mode) -->
+                <div id="youtube-input-area" class="glass-effect rounded-2xl p-8 mb-8 hidden">
+                    <div class="text-center mb-6">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        <h3 class="text-2xl font-semibold mb-2">Enter YouTube Video URL</h3>
+                    </div>
+                    <div class="flex gap-4">
+                        <input type="text" id="youtube-url-input" 
+                               placeholder="https://www.youtube.com/watch?v=..." 
+                               class="flex-1 px-4 py-3 rounded-lg bg-gray-800/50 border border-gray-600 focus:border-purple-500 focus:outline-none text-white placeholder-gray-400">
+                        <button id="youtube-transcribe-btn" 
+                                class="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-semibold transition">
+                            Transcribe
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 text-center mt-4">Paste a YouTube video URL to transcribe its audio • Max 10 minutes</p>
+                </div>
+                
+                <!-- Results Area -->
+                <div id="demo-results" class="glass-effect rounded-2xl p-8 hidden">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-semibold">Transcription Result</h3>
+                        <button id="demo-copy-btn" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition">
+                            Copy Text
+                        </button>
+                    </div>
+                    <div id="demo-transcription-text" class="bg-gray-900 rounded-lg p-6 mb-6 font-mono text-lg leading-relaxed"></div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-purple-400" id="demo-language">-</div>
+                            <div class="text-sm text-gray-400">Language</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-400" id="demo-confidence">-</div>
+                            <div class="text-sm text-gray-400">Confidence</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-400" id="demo-duration">-</div>
+                            <div class="text-sm text-gray-400">Duration</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-400" id="demo-words">-</div>
+                            <div class="text-sm text-gray-400">Word Count</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="demo-loading" class="glass-effect rounded-2xl p-8 text-center hidden">
+                    <div class="animate-spin w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <h3 class="text-xl font-semibold mb-2">Processing your audio...</h3>
+                    <p class="text-gray-400">This may take a few moments depending on file size</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 px-4">
+        <div class="max-w-4xl mx-auto text-center" data-aos="fade-up">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">
+                Ready to Build with <span class="gradient-text">VoiceForge</span>?
+            </h2>
+            <p class="text-xl text-gray-400 mb-8">
+                Join thousands of developers building the future of voice technology
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/developer" class="px-8 py-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition text-lg font-semibold">
+                    Start Free Trial →
+                </a>
+                <a href="/docs" class="px-8 py-4 rounded-lg glass-effect hover:bg-white/10 transition text-lg font-semibold">
+                    Read Documentation
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 py-12 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <!-- Company -->
+                <div>
+                    <h4 class="font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">About</a></li>
+                        <li><a href="#" class="hover:text-white transition">Blog</a></li>
+                        <li><a href="#" class="hover:text-white transition">Careers</a></li>
+                        <li><a href="#" class="hover:text-white transition">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Product -->
+                <div>
+                    <h4 class="font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">Features</a></li>
+                        <li><a href="#" class="hover:text-white transition">Pricing</a></li>
+                        <li><a href="#" class="hover:text-white transition">API Status</a></li>
+                        <li><a href="#" class="hover:text-white transition">Changelog</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Developers -->
+                <div>
+                    <h4 class="font-semibold mb-4">Developers</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/docs" class="hover:text-white transition">Documentation</a></li>
+                        <li><a href="#" class="hover:text-white transition">API Reference</a></li>
+                        <li><a href="#" class="hover:text-white transition">SDKs</a></li>
+                        <li><a href="#" class="hover:text-white transition">Support</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Legal -->
+                <div>
+                    <h4 class="font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">Privacy</a></li>
+                        <li><a href="#" class="hover:text-white transition">Terms</a></li>
+                        <li><a href="#" class="hover:text-white transition">Security</a></li>
+                        <li><a href="#" class="hover:text-white transition">Compliance</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400">© 2024 VoiceForge. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white transition">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Initialize AOS -->
+    <script>
+        AOS.init({
+            duration: 1000,
+            once: true
+        });
+        
+        // Playground functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('demo-upload-area');
+            const fileInput = document.getElementById('demo-file-input');
+            const resultsArea = document.getElementById('demo-results');
+            const loadingArea = document.getElementById('demo-loading');
+            const copyBtn = document.getElementById('demo-copy-btn');
+            
+            // Mode toggle elements
+            const modeFile = document.getElementById('mode-file');
+            const modeYouTube = document.getElementById('mode-youtube');
+            const fileInputArea = document.getElementById('file-input-area');
+            const youtubeInputArea = document.getElementById('youtube-input-area');
+            const youtubeUrlInput = document.getElementById('youtube-url-input');
+            const youtubeTranscribeBtn = document.getElementById('youtube-transcribe-btn');
+            
+            // Mode toggle functionality
+            modeFile.addEventListener('click', () => {
+                modeFile.classList.add('bg-gradient-to-r', 'from-purple-500', 'to-pink-500', 'text-white');
+                modeFile.classList.remove('text-gray-300');
+                modeYouTube.classList.remove('bg-gradient-to-r', 'from-purple-500', 'to-pink-500', 'text-white');
+                modeYouTube.classList.add('text-gray-300');
+                
+                fileInputArea.classList.remove('hidden');
+                youtubeInputArea.classList.add('hidden');
+            });
+            
+            modeYouTube.addEventListener('click', () => {
+                modeYouTube.classList.add('bg-gradient-to-r', 'from-purple-500', 'to-pink-500', 'text-white');
+                modeYouTube.classList.remove('text-gray-300');
+                modeFile.classList.remove('bg-gradient-to-r', 'from-purple-500', 'to-pink-500', 'text-white');
+                modeFile.classList.add('text-gray-300');
+                
+                youtubeInputArea.classList.remove('hidden');
+                fileInputArea.classList.add('hidden');
+            });
+            
+            // YouTube transcription
+            youtubeTranscribeBtn.addEventListener('click', async () => {
+                const url = youtubeUrlInput.value.trim();
+                if (!url) {
+                    alert('Please enter a YouTube URL');
+                    return;
+                }
+                
+                // Basic YouTube URL validation
+                if (!url.includes('youtube.com/watch') && !url.includes('youtu.be/')) {
+                    alert('Please enter a valid YouTube URL');
+                    return;
+                }
+                
+                // Show loading
+                resultsArea.classList.add('hidden');
+                loadingArea.classList.remove('hidden');
+                
+                try {
+                    const response = await fetch('/api/v1/transcribe/youtube', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ url: url })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        displayResult(result);
+                    } else {
+                        throw new Error(result.detail || 'YouTube transcription failed');
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                    loadingArea.classList.add('hidden');
+                }
+            });
+            
+            // Click to upload
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            // Drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#a855f7';
+                uploadArea.style.backgroundColor = 'rgba(168, 85, 247, 0.1)';
+            });
+            
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '';
+                uploadArea.style.backgroundColor = '';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '';
+                uploadArea.style.backgroundColor = '';
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+            
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+            
+            // Handle file upload
+            async function handleFile(file) {
+                // Validate file
+                const validTypes = ['audio/mp3', 'audio/wav', 'audio/m4a', 'audio/mp4', 'audio/ogg', 'audio/flac'];
+                const validExtensions = ['.mp3', '.wav', '.m4a', '.mp4', '.ogg', '.flac'];
+                const isValidType = validTypes.some(type => file.type === type) || 
+                                  validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+                
+                if (!isValidType) {
+                    alert('Please upload a valid audio file (MP3, WAV, M4A, MP4, OGG, FLAC)');
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File size must be less than 10MB');
+                    return;
+                }
+                
+                // Show loading
+                resultsArea.classList.add('hidden');
+                loadingArea.classList.remove('hidden');
+                
+                // Upload file
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                try {
+                    const response = await fetch('/api/v1/transcribe', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        displayResult(result);
+                    } else {
+                        throw new Error(result.detail || 'Transcription failed');
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                    loadingArea.classList.add('hidden');
+                }
+            }
+            
+            // Display transcription result
+            function displayResult(result) {
+                const transcription = result.transcription;
+                
+                document.getElementById('demo-transcription-text').textContent = transcription.text;
+                document.getElementById('demo-language').textContent = transcription.language || 'Unknown';
+                document.getElementById('demo-confidence').textContent = 
+                    transcription.confidence ? (transcription.confidence * 100).toFixed(1) + '%' : 'N/A';
+                document.getElementById('demo-duration').textContent = 
+                    transcription.duration ? transcription.duration.toFixed(1) + 's' : 'N/A';
+                document.getElementById('demo-words').textContent = 
+                    transcription.word_count || transcription.text.split(' ').length;
+                
+                loadingArea.classList.add('hidden');
+                resultsArea.classList.remove('hidden');
+                
+                // Smooth scroll to results
+                resultsArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            // Copy functionality
+            copyBtn.addEventListener('click', async () => {
+                const text = document.getElementById('demo-transcription-text').textContent;
+                try {
+                    await navigator.clipboard.writeText(text);
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy Text';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

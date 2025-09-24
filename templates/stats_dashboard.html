@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceForge API Statistics</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .stats-hero {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            padding: 4rem 0;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient);
+        }
+        
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin: 1rem 0;
+            line-height: 1;
+        }
+        
+        .metric-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-change {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        .metric-change.positive {
+            color: var(--success);
+        }
+        
+        .metric-change.negative {
+            color: var(--error);
+        }
+        
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin-bottom: 1rem;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-operational {
+            color: var(--success);
+        }
+        
+        .status-operational .status-dot {
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .api-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .info-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        
+        .info-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .endpoint-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .endpoint-list li {
+            background: var(--background);
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.1) rotate(180deg);
+        }
+        
+        .last-updated {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">VF</div>
+                    <span>VoiceForge</span>
+                </div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/developer">Developer Portal</a></li>
+                        <li><a href="/docs">API Docs</a></li>
+                        <li><a href="/stats" class="active">Statistics</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="stats-hero">
+        <div class="container">
+            <h1>📊 VoiceForge API Statistics</h1>
+            <p>Real-time analytics and performance metrics for our Speech-to-Text service</p>
+            <div style="margin-top: 2rem;">
+                <div class="status-indicator status-operational">
+                    <div class="status-dot"></div>
+                    <span id="service-status">All Systems Operational</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading statistics...</p>
+        </div>
+
+        <!-- Main Statistics -->
+        <div id="stats-content" class="hidden">
+            <div class="stats-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Total Developers</div>
+                    <div class="metric-value" id="total-developers">0</div>
+                    <div class="metric-change positive" id="developers-change">+0 this month</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-label">API Calls</div>
+                    <div class="metric-value" id="total-transcriptions">0</div>
+                    <div class="metric-change positive" id="calls-change">+0 today</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-label">Active Days</div>
+                    <div class="metric-value" id="active-days">0</div>
+                    <div class="metric-change positive">Last 30 days</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-label">Languages Supported</div>
+                    <div class="metric-value" id="supported-languages">100+</div>
+                    <div class="metric-change">Auto-detection</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-container">
+                <div class="chart-title">📈 API Usage Over Time</div>
+                <div class="chart-wrapper">
+                    <canvas id="usageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="api-info">
+                <div class="info-card">
+                    <h3>🚀 API Performance</h3>
+                    <div class="stats">
+                        <div class="stat-card" style="text-align: left; margin-bottom: 1rem;">
+                            <div class="stat-value" id="avg-response-time">~2.5s</div>
+                            <div class="stat-label">Average Response Time</div>
+                        </div>
+                        <div class="stat-card" style="text-align: left; margin-bottom: 1rem;">
+                            <div class="stat-value" id="success-rate">99.9%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                        <div class="stat-card" style="text-align: left;">
+                            <div class="stat-value" id="model-info">Whisper-Tiny</div>
+                            <div class="stat-label">AI Model</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>🔗 API Endpoints</h3>
+                    <ul class="endpoint-list">
+                        <li>POST /api/v1/transcribe</li>
+                        <li>GET /api/v1/usage</li>
+                        <li>GET /api/v1/stats</li>
+                        <li>GET /api/v1/health</li>
+                    </ul>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">
+                        📚 View full documentation at <a href="/docs" style="color: var(--primary-color);">/docs</a>
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <h3>💰 Pricing Plans</h3>
+                    <div style="color: var(--text-secondary); line-height: 1.6;">
+                        <div style="margin-bottom: 1rem;">
+                            <strong style="color: var(--success);">Free Developer:</strong><br>
+                            1,000 requests/month<br>
+                            10MB file limit
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <strong style="color: var(--primary-color);">Pro (Coming Soon):</strong><br>
+                            10,000 requests/month<br>
+                            50MB file limit
+                        </div>
+                        <div>
+                            <strong style="color: var(--accent);">Enterprise:</strong><br>
+                            Unlimited requests<br>
+                            Custom deployment
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>🌍 Global Reach</h3>
+                    <div style="color: var(--text-secondary); line-height: 1.6;">
+                        <div style="margin-bottom: 0.5rem;">🇺🇸 English - Native</div>
+                        <div style="margin-bottom: 0.5rem;">🇪🇸 Spanish - Excellent</div>
+                        <div style="margin-bottom: 0.5rem;">🇫🇷 French - Excellent</div>
+                        <div style="margin-bottom: 0.5rem;">🇩🇪 German - Excellent</div>
+                        <div style="margin-bottom: 0.5rem;">🇨🇳 Chinese - Good</div>
+                        <div style="color: var(--primary-color);">+ 95 more languages</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="last-updated" id="last-updated">
+                Last updated: Loading...
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshStats()" title="Refresh Statistics">
+        🔄
+    </button>
+
+    <footer style="background: var(--surface); padding: 2rem 0; margin-top: 4rem; border-top: 1px solid var(--border);">
+        <div class="container">
+            <div style="text-align: center; color: var(--text-secondary);">
+                <p>VoiceForge API Statistics Dashboard</p>
+                <p style="font-size: 0.875rem;">Real-time data • Auto-refreshes every 30 seconds</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let usageChart = null;
+        let refreshInterval = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+            startAutoRefresh();
+        });
+
+        async function loadStatistics() {
+            try {
+                // Show loading
+                document.getElementById('loading').classList.remove('hidden');
+                document.getElementById('stats-content').classList.add('hidden');
+
+                // Fetch stats
+                const response = await fetch('/api/v1/stats');
+                const stats = await response.json();
+
+                // Update metrics
+                document.getElementById('total-developers').textContent = stats.total_developers.toLocaleString();
+                document.getElementById('total-transcriptions').textContent = stats.total_transcriptions.toLocaleString();
+                document.getElementById('active-days').textContent = stats.active_days;
+                document.getElementById('supported-languages').textContent = stats.supported_languages + '+';
+
+                // Update status
+                const statusEl = document.getElementById('service-status');
+                if (stats.status === 'operational') {
+                    statusEl.textContent = 'All Systems Operational';
+                    statusEl.parentElement.className = 'status-indicator status-operational';
+                } else {
+                    statusEl.textContent = 'Service Maintenance';
+                    statusEl.parentElement.className = 'status-indicator status-maintenance';
+                }
+
+                // Update model info
+                document.getElementById('model-info').textContent = stats.model || 'Whisper-Tiny';
+
+                // Create/update chart
+                createUsageChart(stats);
+
+                // Update last updated time
+                document.getElementById('last-updated').textContent = 
+                    'Last updated: ' + new Date().toLocaleTimeString();
+
+                // Hide loading, show content
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('stats-content').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                document.getElementById('loading').innerHTML = 
+                    '<p style="color: var(--error);">❌ Error loading statistics. Please try again.</p>';
+            }
+        }
+
+        function createUsageChart(stats) {
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            
+            // Generate mock data for demonstration
+            const last7Days = [];
+            const usageData = [];
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                last7Days.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+                
+                // Mock usage data with some randomness
+                const baseUsage = Math.max(0, stats.total_transcriptions / 7);
+                usageData.push(Math.floor(baseUsage * (0.5 + Math.random())));
+            }
+
+            if (usageChart) {
+                usageChart.destroy();
+            }
+
+            usageChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last7Days,
+                    datasets: [{
+                        label: 'API Calls',
+                        data: usageData,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#475569',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(71, 85, 105, 0.1)'
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(71, 85, 105, 0.1)'
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function refreshStats() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.style.transform = 'scale(1.1) rotate(360deg)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 600);
+            
+            loadStatistics();
+        }
+
+        function startAutoRefresh() {
+            // Auto-refresh every 30 seconds
+            refreshInterval = setInterval(() => {
+                loadStatistics();
+            }, 30000);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>

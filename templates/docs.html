@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceForge Documentation - API Reference & Guides</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* Sidebar active state */
+        .sidebar-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-300" x-data="{ 
+    sidebarOpen: true,
+    activeSection: 'getting-started',
+    searchQuery: '',
+    copySuccess: false
+}">
+    
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 glass-effect border-b border-gray-800">
+        <div class="px-4 py-3 flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center space-x-4">
+                <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <a href="/" class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <span class="text-white font-bold">VF</span>
+                    </div>
+                    <span class="text-lg font-bold">VoiceForge Docs</span>
+                </a>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-8">
+                <div class="relative w-full">
+                    <input 
+                        type="text" 
+                        x-model="searchQuery"
+                        placeholder="Search documentation..." 
+                        class="w-full px-4 py-2 bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                    <svg class="absolute right-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex items-center space-x-4">
+                <a href="/developer" class="px-4 py-2 rounded-lg glass-effect hover:bg-white/10 transition">
+                    Dashboard
+                </a>
+                <a href="https://github.com/voiceforge/sdk" class="hover:text-purple-400 transition">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <div class="flex pt-16">
+        <!-- Sidebar -->
+        <aside 
+            x-show="sidebarOpen" 
+            x-transition
+            class="fixed lg:relative w-64 h-screen overflow-y-auto bg-gray-900 border-r border-gray-800"
+        >
+            <nav class="p-4 space-y-6">
+                <!-- Getting Started -->
+                <div>
+                    <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Getting Started</h3>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#introduction" 
+                               @click="activeSection = 'introduction'"
+                               :class="activeSection === 'introduction' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Introduction
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#quickstart" 
+                               @click="activeSection = 'quickstart'"
+                               :class="activeSection === 'quickstart' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Quick Start
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#authentication" 
+                               @click="activeSection = 'authentication'"
+                               :class="activeSection === 'authentication' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Authentication
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- API Reference -->
+                <div>
+                    <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">API Reference</h3>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#transcribe" 
+                               @click="activeSection = 'transcribe'"
+                               :class="activeSection === 'transcribe' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Transcribe Audio
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#streaming" 
+                               @click="activeSection = 'streaming'"
+                               :class="activeSection === 'streaming' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Streaming API
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#batch" 
+                               @click="activeSection = 'batch'"
+                               :class="activeSection === 'batch' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Batch Processing
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#webhooks" 
+                               @click="activeSection = 'webhooks'"
+                               :class="activeSection === 'webhooks' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Webhooks
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- SDKs -->
+                <div>
+                    <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">SDKs & Libraries</h3>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#python-sdk" 
+                               @click="activeSection = 'python-sdk'"
+                               :class="activeSection === 'python-sdk' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Python SDK
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#javascript-sdk" 
+                               @click="activeSection = 'javascript-sdk'"
+                               :class="activeSection === 'javascript-sdk' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                JavaScript SDK
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#go-sdk" 
+                               @click="activeSection = 'go-sdk'"
+                               :class="activeSection === 'go-sdk' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Go SDK
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Guides -->
+                <div>
+                    <h3 class="text-xs uppercase tracking-wider text-gray-500 mb-3">Guides</h3>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#best-practices" 
+                               @click="activeSection = 'best-practices'"
+                               :class="activeSection === 'best-practices' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Best Practices
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#rate-limits" 
+                               @click="activeSection = 'rate-limits'"
+                               :class="activeSection === 'rate-limits' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Rate Limits
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#error-handling" 
+                               @click="activeSection = 'error-handling'"
+                               :class="activeSection === 'error-handling' ? 'sidebar-active' : 'hover:bg-gray-800'"
+                               class="block px-3 py-2 rounded-lg transition">
+                                Error Handling
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1 max-w-4xl mx-auto px-8 py-8">
+            <!-- Introduction -->
+            <section id="introduction" x-show="activeSection === 'introduction'">
+                <h1 class="text-4xl font-bold mb-4 gradient-text">Welcome to VoiceForge</h1>
+                <p class="text-lg text-gray-400 mb-8">
+                    VoiceForge is a powerful speech-to-text API that transforms audio into accurate text transcriptions. 
+                    With support for 100+ languages and state-of-the-art accuracy, VoiceForge is perfect for applications 
+                    ranging from voice assistants to meeting transcription.
+                </p>
+                
+                <div class="glass-effect rounded-lg p-6 mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Key Features</h2>
+                    <ul class="space-y-2">
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-400 mt-1 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span><strong>High Accuracy:</strong> 99.5% accuracy with advanced neural networks</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-400 mt-1 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span><strong>Multiple Languages:</strong> Support for 100+ languages with automatic detection</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-400 mt-1 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span><strong>Real-time Processing:</strong> Stream audio for live transcription</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-400 mt-1 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span><strong>Speaker Diarization:</strong> Identify different speakers in conversations</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-purple-900/20 border border-purple-500/30 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-2 text-purple-400">🚀 Ready to get started?</h3>
+                    <p class="text-gray-400">
+                        Check out our <a href="#quickstart" @click="activeSection = 'quickstart'" class="text-purple-400 hover:text-purple-300">Quick Start Guide</a> 
+                        to transcribe your first audio file in minutes.
+                    </p>
+                </div>
+            </section>
+            
+            <!-- Quick Start -->
+            <section id="quickstart" x-show="activeSection === 'quickstart'">
+                <h1 class="text-4xl font-bold mb-4">Quick Start</h1>
+                <p class="text-lg text-gray-400 mb-8">
+                    Get up and running with VoiceForge in less than 5 minutes.
+                </p>
+                
+                <!-- Step 1 -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Step 1: Get Your API Key</h2>
+                    <p class="text-gray-400 mb-4">
+                        Sign up for a free account and get your API key from the developer dashboard.
+                    </p>
+                    <a href="/developer" class="inline-flex px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition">
+                        Get API Key →
+                    </a>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Step 2: Install SDK (Optional)</h2>
+                    <p class="text-gray-400 mb-4">
+                        Install our official SDK for your preferred language:
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="glass-effect rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-mono text-sm">Python</span>
+                                <button @click="navigator.clipboard.writeText('pip install voiceforge'); copySuccess = true; setTimeout(() => copySuccess = false, 2000)" 
+                                        class="text-sm text-purple-400 hover:text-purple-300">
+                                    Copy
+                                </button>
+                            </div>
+                            <pre class="bg-gray-900 rounded p-3"><code class="language-bash">pip install voiceforge</code></pre>
+                        </div>
+                        
+                        <div class="glass-effect rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-mono text-sm">Node.js</span>
+                                <button @click="navigator.clipboard.writeText('npm install voiceforge'); copySuccess = true; setTimeout(() => copySuccess = false, 2000)" 
+                                        class="text-sm text-purple-400 hover:text-purple-300">
+                                    Copy
+                                </button>
+                            </div>
+                            <pre class="bg-gray-900 rounded p-3"><code class="language-bash">npm install voiceforge</code></pre>
+                        </div>
+                        
+                        <div class="glass-effect rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-mono text-sm">Go</span>
+                                <button @click="navigator.clipboard.writeText('go get github.com/voiceforge/voiceforge-go'); copySuccess = true; setTimeout(() => copySuccess = false, 2000)" 
+                                        class="text-sm text-purple-400 hover:text-purple-300">
+                                    Copy
+                                </button>
+                            </div>
+                            <pre class="bg-gray-900 rounded p-3"><code class="language-bash">go get github.com/voiceforge/voiceforge-go</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Step 3: Make Your First Request</h2>
+                    <p class="text-gray-400 mb-4">
+                        Transcribe your first audio file with a simple API call:
+                    </p>
+                    
+                    <div class="glass-effect rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-mono text-sm">Python Example</span>
+                            <button @click="navigator.clipboard.writeText(document.querySelector('#python-example').textContent); copySuccess = true; setTimeout(() => copySuccess = false, 2000)" 
+                                    class="text-sm text-purple-400 hover:text-purple-300">
+                                Copy
+                            </button>
+                        </div>
+                        <pre class="bg-gray-900 rounded p-3"><code id="python-example" class="language-python">import voiceforge
+
+# Initialize client
+client = voiceforge.Client(api_key="YOUR_API_KEY")
+
+# Transcribe audio file
+with open("audio.mp3", "rb") as audio_file:
+    result = client.transcribe(
+        file=audio_file,
+        language="auto"  # Auto-detect language
+    )
+
+# Print transcription
+print(result.text)
+print(f"Language: {result.language}")
+print(f"Confidence: {result.confidence}")</code></pre>
+                    </div>
+                </div>
+                
+                <!-- Success Message -->
+                <div x-show="copySuccess" x-transition class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg">
+                    Copied to clipboard!
+                </div>
+            </section>
+            
+            <!-- Authentication -->
+            <section id="authentication" x-show="activeSection === 'authentication'">
+                <h1 class="text-4xl font-bold mb-4">Authentication</h1>
+                <p class="text-lg text-gray-400 mb-8">
+                    Learn how to authenticate your API requests to VoiceForge.
+                </p>
+                
+                <div class="glass-effect rounded-lg p-6 mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">API Key Authentication</h2>
+                    <p class="text-gray-400 mb-4">
+                        VoiceForge uses API keys to authenticate requests. You can find your API key in the 
+                        <a href="/developer" class="text-purple-400 hover:text-purple-300">developer dashboard</a>.
+                    </p>
+                    
+                    <p class="text-gray-400 mb-4">
+                        Include your API key in the <code class="bg-gray-800 px-2 py-1 rounded">Authorization</code> header:
+                    </p>
+                    
+                    <pre class="bg-gray-900 rounded p-4"><code class="language-bash">Authorization: Bearer YOUR_API_KEY</code></pre>
+                </div>
+                
+                <div class="glass-effect rounded-lg p-6 mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Example Requests</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="font-semibold mb-2">cURL</h3>
+                            <pre class="bg-gray-900 rounded p-3"><code class="language-bash">curl -X POST https://api.voiceforge.ai/v1/transcribe \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@audio.mp3"</code></pre>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-semibold mb-2">JavaScript</h3>
+                            <pre class="bg-gray-900 rounded p-3"><code class="language-javascript">const formData = new FormData();
+formData.append('file', audioFile);
+
+const response = await fetch('https://api.voiceforge.ai/v1/transcribe', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  },
+  body: formData
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-2 text-yellow-400">⚠️ Security Best Practices</h3>
+                    <ul class="text-gray-400 space-y-2">
+                        <li>• Never expose your API key in client-side code</li>
+                        <li>• Use environment variables to store API keys</li>
+                        <li>• Rotate your API keys regularly</li>
+                        <li>• Use different API keys for development and production</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Transcribe API -->
+            <section id="transcribe" x-show="activeSection === 'transcribe'">
+                <h1 class="text-4xl font-bold mb-4">Transcribe Audio API</h1>
+                <p class="text-lg text-gray-400 mb-8">
+                    Convert audio files to text with high accuracy.
+                </p>
+                
+                <div class="glass-effect rounded-lg p-6 mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Endpoint</h2>
+                    <pre class="bg-gray-900 rounded p-4"><code>POST https://api.voiceforge.ai/v1/transcribe</code></pre>
+                </div>
+                
+                <div class="glass-effect rounded-lg p-6 mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Request Parameters</h2>
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-left py-2">Parameter</th>
+                                <th class="text-left py-2">Type</th>
+                                <th class="text-left py-2">Required</th>
+                                <th class="text-left py-2">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-800">
+                                <td class="py-3"><code>file</code></td>
+                                <td class="py-3">File</td>
+                                <td class="py-3">Yes</td>
+                                <td class="py-3">Audio file to transcribe (MP3, WAV, M4A, etc.)</td>
+                            </tr>
+                            <tr class="border-b border-gray-800">
+                                <td class="py-3"><code>language</code></td>
+                                <td class="py-3">String</td>
+                                <td class="py-3">No</td>
+                                <td class="py-3">Language code (e.g., "en", "es"). Use "auto" for detection.</td>
+                            </tr>
+                            <tr class="border-b border-gray-800">
+                                <td class="py-3"><code>diarize</code></td>
+                                <td class="py-3">Boolean</td>
+                                <td class="py-3">No</td>
+                                <td class="py-3">Enable speaker diarization (default: false)</td>
+                            </tr>
+                            <tr class="border-b border-gray-800">
+                                <td class="py-3"><code>punctuate</code></td>
+                                <td class="py-3">Boolean</td>
+                                <td class="py-3">No</td>
+                                <td class="py-3">Add punctuation (default: true)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="glass-effect rounded-lg p-6 mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Response</h2>
+                    <pre class="bg-gray-900 rounded p-4"><code class="language-json">{
+  "status": "success",
+  "transcription": {
+    "id": "txn_abc123",
+    "text": "Hello, this is a sample transcription.",
+    "language": "en",
+    "confidence": 0.95,
+    "duration": 5.2,
+    "word_count": 6,
+    "segments": [
+      {
+        "start": 0.0,
+        "end": 2.1,
+        "text": "Hello,"
+      },
+      {
+        "start": 2.1,
+        "end": 5.2,
+        "text": "this is a sample transcription."
+      }
+    ]
+  },
+  "usage": {
+    "minutes_used": 0.087,
+    "minutes_remaining": 999.913
+  }
+}</code></pre>
+                </div>
+            </section>
+            
+            <!-- More sections would go here... -->
+            
+        </main>
+    </div>
+    
+    <!-- Initialize Prism.js -->
+    <script>
+        Prism.highlightAll();
+    </script>
+</body>
+</html>

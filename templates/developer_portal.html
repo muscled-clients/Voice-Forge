@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceForge Developer Portal</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .auth-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .dashboard-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .api-key-display {
+            font-family: 'Fira Code', monospace;
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            word-break: break-all;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .usage-meter {
+            width: 100%;
+            height: 20px;
+            background: var(--background);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .usage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success) 0%, var(--warning) 70%, var(--error) 100%);
+            transition: width 0.3s ease;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        .tab {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .code-example {
+            background: var(--background);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin: 1rem 0;
+            position: relative;
+        }
+        .code-example pre {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">VF</div>
+                    <span>VoiceForge Developer Portal</span>
+                </div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/docs">API Docs</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li id="logout-btn" class="hidden"><a href="#" onclick="logout()">Logout</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero" style="padding: 2rem 0;">
+        <div class="container">
+            <h1>🚀 Build with VoiceForge API</h1>
+            <p>Get your API key and start integrating speech-to-text into your applications</p>
+        </div>
+    </section>
+
+    <div class="container">
+        <!-- Authentication Forms -->
+        <div id="auth-section">
+            <div class="tab-container">
+                <button class="tab active" onclick="showTab('login', event)">Login</button>
+                <button class="tab" onclick="showTab('signup', event)">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-tab" class="tab-content active">
+                <div class="auth-container">
+                    <h3>Developer Login</h3>
+                    
+                    <!-- Google OAuth Login -->
+                    <div style="margin-bottom: 2rem;">
+                        <a href="/auth/google/login" class="btn" style="background: #4285f4; color: white; width: 100%; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Continue with Google
+                        </a>
+                        
+                        <!-- Divider -->
+                        <div style="text-align: center; margin: 1.5rem 0; color: var(--text-secondary); position: relative;">
+                            <span style="background: var(--surface); padding: 0 1rem;">or continue with email</span>
+                            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border); z-index: -1;"></div>
+                        </div>
+                    </div>
+                    
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="login-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            🔑 Login to Dashboard
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signup-tab" class="tab-content">
+                <div class="auth-container">
+                    <h3>Create Developer Account</h3>
+                    
+                    <!-- Google OAuth Signup -->
+                    <div style="margin-bottom: 2rem;">
+                        <a href="/auth/google/login" class="btn" style="background: #4285f4; color: white; width: 100%; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Sign up with Google
+                        </a>
+                        
+                        <!-- Divider -->
+                        <div style="text-align: center; margin: 1.5rem 0; color: var(--text-secondary); position: relative;">
+                            <span style="background: var(--surface); padding: 0 1rem;">or create account with email</span>
+                            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border); z-index: -1;"></div>
+                        </div>
+                    </div>
+                    
+                    <form id="signup-form">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="signup-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="signup-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="signup-password" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>Company/Project (Optional)</label>
+                            <input type="text" id="signup-company">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            🎉 Create Account & Get API Key
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Developer Dashboard -->
+        <div id="dashboard-section" class="hidden">
+            <h2>👨‍💻 Developer Dashboard</h2>
+            <div class="dashboard-grid">
+                <!-- API Key Card -->
+                <div class="dashboard-card">
+                    <h3>🔑 Your API Key</h3>
+                    <div class="api-key-display" id="api-key-display">
+                        <span id="api-key-value">Loading...</span>
+                        <button class="copy-btn" onclick="copyApiKey()">📋</button>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">
+                        Keep this key secure! Use it in your API requests.
+                    </p>
+                    <button class="btn btn-secondary" onclick="regenerateApiKey()">
+                        🔄 Regenerate Key
+                    </button>
+                </div>
+
+                <!-- Usage Stats Card -->
+                <div class="dashboard-card">
+                    <h3>📊 Usage Statistics</h3>
+                    <div class="stats" style="margin-bottom: 1rem;">
+                        <div class="stat-card" style="text-align: left;">
+                            <div class="stat-value" id="usage-count">0</div>
+                            <div class="stat-label">API Calls This Month</div>
+                        </div>
+                    </div>
+                    <div class="usage-meter">
+                        <div class="usage-fill" id="usage-fill" style="width: 0%"></div>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem;">
+                        <span id="usage-text">0 / 1,000 calls used (Free Plan)</span>
+                    </p>
+                </div>
+
+                <!-- Quick Start Card -->
+                <div class="dashboard-card">
+                    <h3>🚀 Quick Start</h3>
+                    <p>Start using the API in minutes:</p>
+                    <ol style="color: var(--text-secondary); line-height: 1.6;">
+                        <li>Copy your API key above</li>
+                        <li>Make your first API call</li>
+                        <li>Check the response</li>
+                    </ol>
+                    <button class="btn btn-primary" onclick="showCodeExamples()">
+                        📖 View Code Examples
+                    </button>
+                </div>
+
+                <!-- Account Info Card -->
+                <div class="dashboard-card">
+                    <h3>👤 Account Information</h3>
+                    <div style="color: var(--text-secondary);">
+                        <p><strong>Name:</strong> <span id="user-name">Loading...</span></p>
+                        <p><strong>Email:</strong> <span id="user-email">Loading...</span></p>
+                        <p><strong>Plan:</strong> <span style="color: var(--success);">Free Developer</span></p>
+                        <p><strong>Member since:</strong> <span id="user-created">Loading...</span></p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="showUpgrade()">
+                        ⬆️ Upgrade Plan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Code Examples Section -->
+            <div id="code-examples" class="hidden" style="margin-top: 3rem;">
+                <h3>💻 Code Examples</h3>
+                <div class="tab-container">
+                    <button class="tab active" onclick="showCodeTab('curl')">cURL</button>
+                    <button class="tab" onclick="showCodeTab('python')">Python</button>
+                    <button class="tab" onclick="showCodeTab('javascript')">JavaScript</button>
+                    <button class="tab" onclick="showCodeTab('nodejs')">Node.js</button>
+                </div>
+
+                <div id="curl-code" class="tab-content active">
+                    <div class="code-example">
+                        <pre><code># Upload and transcribe audio file
+curl -X POST "http://localhost:8000/api/v1/transcribe" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@audio.wav"
+
+# Response:
+{
+  "status": "success",
+  "transcription": {
+    "text": "Hello world, this is a test.",
+    "language": "en",
+    "confidence": 0.95,
+    "duration": 2.3
+  }
+}</code></pre>
+                    </div>
+                </div>
+
+                <div id="python-code" class="tab-content">
+                    <div class="code-example">
+                        <pre><code>import requests
+
+# Your VoiceForge API key
+API_KEY = "YOUR_API_KEY"
+API_URL = "http://localhost:8000/api/v1/transcribe"
+
+# Upload audio file
+files = {'file': open('audio.wav', 'rb')}
+headers = {'Authorization': f'Bearer {API_KEY}'}
+
+response = requests.post(API_URL, files=files, headers=headers)
+result = response.json()
+
+print(f"Transcription: {result['transcription']['text']}")
+print(f"Language: {result['transcription']['language']}")
+print(f"Confidence: {result['transcription']['confidence']}")</code></pre>
+                    </div>
+                </div>
+
+                <div id="javascript-code" class="tab-content">
+                    <div class="code-example">
+                        <pre><code>// VoiceForge API integration
+const API_KEY = 'YOUR_API_KEY';
+const API_URL = 'http://localhost:8000/api/v1/transcribe';
+
+async function transcribeAudio(audioFile) {
+  const formData = new FormData();
+  formData.append('file', audioFile);
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`
+      },
+      body: formData
+    });
+
+    const result = await response.json();
+    console.log('Transcription:', result.transcription.text);
+    return result;
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+// Usage with file input
+document.getElementById('audioFile').addEventListener('change', (e) => {
+  transcribeAudio(e.target.files[0]);
+});</code></pre>
+                    </div>
+                </div>
+
+                <div id="nodejs-code" class="tab-content">
+                    <div class="code-example">
+                        <pre><code>const axios = require('axios');
+const FormData = require('form-data');
+const fs = require('fs');
+
+async function transcribeAudio(filePath) {
+  const form = new FormData();
+  form.append('file', fs.createReadStream(filePath));
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8000/api/v1/transcribe',
+      form,
+      {
+        headers: {
+          ...form.getHeaders(),
+          'Authorization': 'Bearer YOUR_API_KEY'
+        }
+      }
+    );
+
+    console.log('Transcription:', response.data.transcription.text);
+    return response.data;
+  } catch (error) {
+    console.error('Error:', error.response?.data || error.message);
+  }
+}
+
+// Usage
+transcribeAudio('./audio.wav');</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let apiToken = localStorage.getItem('voiceforge_token');
+
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            if (apiToken) {
+                loadDashboard();
+            }
+        });
+
+        // Tab switching
+        function showTab(tabName, clickEvent) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Only add active class to clicked element if event exists
+            if (clickEvent && clickEvent.target) {
+                clickEvent.target.classList.add('active');
+            } else {
+                // If no event, find and activate the corresponding tab button
+                document.querySelector(`[onclick*="showTab('${tabName}')"]`)?.classList.add('active');
+            }
+        }
+
+        function showCodeTab(lang) {
+            document.querySelectorAll('#code-examples .tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('#code-examples .tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(lang + '-code').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Authentication
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                full_name: document.getElementById('signup-name').value,
+                email: document.getElementById('signup-email').value,
+                password: document.getElementById('signup-password').value,
+                company: document.getElementById('signup-company').value
+            };
+
+            try {
+                const response = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('✅ Account created successfully! You can now login.');
+                    showTab('login');
+                    document.getElementById('signup-form').reset();
+                } else {
+                    alert('❌ Error: ' + result.detail);
+                }
+            } catch (error) {
+                alert('❌ Network error: ' + error.message);
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            };
+
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    apiToken = result.access_token;
+                    localStorage.setItem('voiceforge_token', apiToken);
+                    loadDashboard();
+                } else {
+                    alert('❌ Login failed: ' + result.detail);
+                }
+            } catch (error) {
+                alert('❌ Network error: ' + error.message);
+            }
+        });
+
+        async function loadDashboard() {
+            try {
+                // Get user info
+                const response = await fetch('/api/v1/users/me', {
+                    headers: { 'Authorization': `Bearer ${apiToken}` }
+                });
+
+                if (response.ok) {
+                    currentUser = await response.json();
+                    
+                    // Update UI
+                    document.getElementById('auth-section').classList.add('hidden');
+                    document.getElementById('dashboard-section').classList.remove('hidden');
+                    document.getElementById('logout-btn').classList.remove('hidden');
+                    
+                    // Populate user info
+                    document.getElementById('user-name').textContent = currentUser.full_name;
+                    document.getElementById('user-email').textContent = currentUser.email;
+                    document.getElementById('user-created').textContent = new Date(currentUser.created_at).toLocaleDateString();
+                    document.getElementById('api-key-value').textContent = currentUser.api_key;
+                    
+                    // Load real usage stats
+                    updateUsageStats();
+                } else {
+                    // Token expired
+                    localStorage.removeItem('voiceforge_token');
+                    apiToken = null;
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        async function updateUsageStats() {
+            try {
+                // Fetch real usage stats from API
+                const response = await fetch('/api/v1/users/stats', {
+                    headers: { 'Authorization': `Bearer ${apiToken}` }
+                });
+                
+                if (response.ok) {
+                    const stats = await response.json();
+                    
+                    const usageCount = stats.requests_this_month;
+                    const usageLimit = stats.monthly_limit;
+                    const usagePercent = (usageCount / usageLimit) * 100;
+
+                    document.getElementById('usage-count').textContent = usageCount.toLocaleString();
+                    document.getElementById('usage-fill').style.width = usagePercent + '%';
+                    document.getElementById('usage-text').textContent = `${usageCount} / ${usageLimit === -1 ? 'Unlimited' : usageLimit.toLocaleString()} calls used (${stats.plan_name || 'Free Plan'})`;
+                    
+                    // Update additional stats if available
+                    if (stats.total_requests !== undefined) {
+                        // You can add more stat displays here
+                        console.log('Total API calls:', stats.total_requests);
+                        console.log('Requests today:', stats.requests_today);
+                        console.log('Average processing time:', stats.avg_processing_time + 's');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading usage stats:', error);
+                // Fall back to showing zero usage
+                document.getElementById('usage-count').textContent = '0';
+                document.getElementById('usage-fill').style.width = '0%';
+                document.getElementById('usage-text').textContent = '0 / 1,000 calls used (Free Plan)';
+            }
+        }
+
+        function copyApiKey() {
+            const apiKey = document.getElementById('api-key-value').textContent;
+            navigator.clipboard.writeText(apiKey).then(() => {
+                alert('✅ API key copied to clipboard!');
+            });
+        }
+
+        function regenerateApiKey() {
+            if (confirm('⚠️ This will invalidate your current API key. Continue?')) {
+                alert('🔄 API key regeneration feature coming soon!');
+            }
+        }
+
+        function showCodeExamples() {
+            document.getElementById('code-examples').classList.remove('hidden');
+            document.getElementById('code-examples').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showUpgrade() {
+            alert('💰 Upgrade plans coming soon! Contact support for enterprise pricing.');
+        }
+
+        function logout() {
+            localStorage.removeItem('voiceforge_token');
+            apiToken = null;
+            currentUser = null;
+            
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('logout-btn').classList.add('hidden');
+            document.getElementById('code-examples').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

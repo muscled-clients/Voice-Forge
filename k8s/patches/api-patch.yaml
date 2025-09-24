@@ -1,0 +1,102 @@
+# Production patches for API deployment
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: voiceforge-api
+  namespace: voiceforge-stt
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        # Production resource limits
+        resources:
+          requests:
+            memory: "6Gi"
+            cpu: "3000m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "12Gi"
+            cpu: "6000m"
+            nvidia.com/gpu: 1
+        
+        # Production environment variables
+        env:
+        - name: LOG_LEVEL
+          value: "WARNING"
+        - name: WORKERS
+          value: "8"
+        - name: MAX_CONNECTIONS
+          value: "2000"
+        - name: ENABLE_DEBUG
+          value: "false"
+        
+        # Enhanced health check intervals for production
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          timeoutSeconds: 15
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 45
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 20  # Allow 5 minutes for startup
+      
+      # Production node selection preferences
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - gpu-node
+                - compute-optimized
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: instance-type
+                operator: In
+                values:
+                - g4dn.xlarge
+                - g4dn.2xlarge
+                - p3.2xlarge
+        
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - api
+            topologyKey: kubernetes.io/hostname
+      
+      # Production tolerations
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "high-memory"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"

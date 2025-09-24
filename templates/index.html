@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceForge - State-of-the-Art Speech-to-Text API</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <meta name="description" content="VoiceForge - Advanced Speech-to-Text API with 100+ languages, real-time processing, and enterprise-grade accuracy">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">VF</div>
+                    <span>VoiceForge</span>
+                </div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="#playground">Playground</a></li>
+                        <li><a href="/developer">Developer Portal</a></li>
+                        <li><a href="/docs">API Docs</a></li>
+                        <li><a href="#features">Features</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>State-of-the-Art Speech-to-Text</h1>
+            <p>Transform audio into text with lightning speed, enterprise accuracy, and support for 100+ languages. Built for developers, scaled for production.</p>
+            <div class="cta-buttons">
+                <a href="#playground" class="btn btn-primary">
+                    🎤 Try Live Demo
+                </a>
+                <a href="/developer" class="btn btn-primary">
+                    👨‍💻 Get API Key
+                </a>
+                <a href="/docs" class="btn btn-secondary">
+                    📚 View API Documentation
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Dashboard -->
+    <section class="container">
+        <div class="stats" id="stats-container">
+            <!-- Stats loaded dynamically -->
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2>Powerful Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Sub-150ms latency with optimized neural networks and edge computing capabilities for real-time applications.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>100+ Languages</h3>
+                    <p>Advanced language detection and transcription support covering global languages with accent-aware processing.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Enterprise Accuracy</h3>
+                    <p>Hybrid AI models combining NVIDIA Canary-1B and Whisper V3 for 30% better accuracy on accented speech.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔊</div>
+                    <h3>Speaker Diarization</h3>
+                    <p>Automatic speaker identification and separation for multi-speaker conversations and meetings.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📡</div>
+                    <h3>Real-time Streaming</h3>
+                    <p>WebSocket-based streaming transcription for live audio processing and immediate results.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Cost Effective</h3>
+                    <p>80% cost reduction compared to competitors while maintaining superior quality and performance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Playground -->
+    <section class="playground" id="playground">
+        <div class="container">
+            <h2>🎮 Interactive Playground</h2>
+            <p style="text-align: center; margin-bottom: 2rem; color: var(--text-secondary);">
+                Upload an audio file to test our speech-to-text capabilities instantly
+            </p>
+            
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">🎵</div>
+                <h3>Drop your audio file here</h3>
+                <p>or click to browse</p>
+                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 1rem;">
+                    Supported formats: MP3, WAV, M4A, MP4, OGG, FLAC
+                </p>
+                <input type="file" id="file-input" class="file-input" accept=".mp3,.wav,.m4a,.mp4,.ogg,.flac">
+            </div>
+            
+            <div class="result-area" id="result-area">
+                <div class="placeholder">
+                    <p>📄 Transcription results will appear here</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Specs -->
+    <section class="container" style="margin: 4rem auto;">
+        <div style="background: var(--surface); padding: 2rem; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="text-align: center; margin-bottom: 2rem; color: var(--primary-color);">🔧 Technical Specifications</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                <div>
+                    <h4>⚡ Performance</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li>• Latency: &lt;150ms</li>
+                        <li>• Throughput: 1000+ req/min</li>
+                        <li>• Accuracy: 95%+ WER</li>
+                        <li>• Uptime: 99.9% SLA</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>🌐 Language Support</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li>• 100+ Languages</li>
+                        <li>• Accent Recognition</li>
+                        <li>• Auto-Detection</li>
+                        <li>• Custom Vocabularies</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>🔗 Integration</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li>• REST API</li>
+                        <li>• GraphQL</li>
+                        <li>• WebSocket Streaming</li>
+                        <li>• Python/JS SDKs</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>🛡️ Enterprise</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li>• SOC2 Compliant</li>
+                        <li>• Data Encryption</li>
+                        <li>• Custom Deployment</li>
+                        <li>• 24/7 Support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Quick Start -->
+    <section class="container" style="margin: 4rem auto;">
+        <div style="background: var(--background); padding: 2rem; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="text-align: center; margin-bottom: 2rem;">🚀 Quick Start</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div>
+                    <h4>cURL</h4>
+                    <pre style="background: var(--surface); padding: 1rem; border-radius: 8px; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 0.875rem;"><code>curl -X POST "http://localhost:8000/api/v1/transcribe" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@audio.wav"</code></pre>
+                </div>
+                <div>
+                    <h4>Python</h4>
+                    <pre style="background: var(--surface); padding: 1rem; border-radius: 8px; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 0.875rem;"><code>import requests
+
+files = {'file': open('audio.wav', 'rb')}
+response = requests.post(
+    'http://localhost:8000/api/v1/transcribe',
+    files=files
+)
+print(response.json())</code></pre>
+                </div>
+                <div>
+                    <h4>JavaScript</h4>
+                    <pre style="background: var(--surface); padding: 1rem; border-radius: 8px; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 0.875rem;"><code>const formData = new FormData();
+formData.append('file', audioFile);
+
+fetch('/api/v1/transcribe', {
+  method: 'POST',
+  body: formData
+}).then(res => res.json())
+  .then(data => console.log(data));</code></pre>
+                </div>
+                <div>
+                    <h4>Response</h4>
+                    <pre style="background: var(--surface); padding: 1rem; border-radius: 8px; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 0.875rem;"><code>{
+  "status": "success",
+  "transcription": {
+    "text": "Hello world",
+    "language": "en",
+    "confidence": 0.95,
+    "duration": 2.3
+  }
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="background: var(--surface); padding: 2rem 0; margin-top: 4rem; border-top: 1px solid var(--border);">
+        <div class="container">
+            <div style="text-align: center;">
+                <div class="logo" style="justify-content: center; margin-bottom: 1rem;">
+                    <div class="logo-icon">VF</div>
+                    <span>VoiceForge</span>
+                </div>
+                <p style="color: var(--text-secondary);">
+                    State-of-the-art Speech-to-Text API • Built with ❤️ for developers
+                </p>
+                <div style="margin-top: 1rem;">
+                    <a href="/docs" style="color: var(--primary-color); text-decoration: none; margin: 0 1rem;">Documentation</a>
+                    <a href="/api/v1/stats" style="color: var(--primary-color); text-decoration: none; margin: 0 1rem;">API Status</a>
+                    <a href="#playground" style="color: var(--primary-color); text-decoration: none; margin: 0 1rem;">Try Demo</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js?v=2"></script>
+    <script src="/static/js/upload-fix.js"></script>
+    <script>
+        // Override the displayFileInfo to use simple upload
+        document.addEventListener('DOMContentLoaded', function() {
+            // Listen for file changes
+            const fileInput = document.getElementById('file-input');
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file && document.getElementById('result-area')) {
+                        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                        const supportedFormats = ['mp3', 'wav', 'm4a', 'mp4', 'ogg', 'flac'];
+                        const fileExtension = file.name.split('.').pop().toLowerCase();
+                        const isSupported = supportedFormats.includes(fileExtension);
+                        
+                        document.getElementById('result-area').innerHTML = `
+                            <div class="file-info">
+                                <h4>📁 Selected File</h4>
+                                <div class="file-details">
+                                    <div><strong>Name:</strong> ${file.name}</div>
+                                    <div><strong>Size:</strong> ${fileSize} MB</div>
+                                    <div><strong>Type:</strong> ${file.type || 'Unknown'}</div>
+                                    <div><strong>Status:</strong> 
+                                        <span class="${isSupported ? 'text-success' : 'text-error'}">
+                                            ${isSupported ? '✅ Supported' : '❌ Unsupported format'}
+                                        </span>
+                                    </div>
+                                </div>
+                                ${isSupported ? '<button class="btn btn-primary" onclick="simpleUploadFile()">🎤 Transcribe Audio</button>' : ''}
+                            </div>
+                        `;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceForge Developer Portal</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .gradient-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .metric-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+        }
+        
+        .metric-card:hover {
+            background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.05) 100%);
+            border-color: rgba(103, 126, 234, 0.3);
+        }
+        
+        .api-key-display {
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 100%);
+            border: 1px solid #404040;
+        }
+        
+        .usage-bar {
+            background: linear-gradient(90deg, #10b981 0%, #059669 50%, #f59e0b 80%, #ef4444 100%);
+            border-radius: 10px;
+            height: 8px;
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-['Plus_Jakarta_Sans']" x-data="{
+    currentView: 'auth',
+    activeTab: 'login',
+    apiToken: localStorage.getItem('voiceforge_token'),
+    currentUser: null,
+    stats: null,
+    loading: false,
+    showApiKey: false,
+    showForgotPassword: false,
+    resetEmail: '',
+    resetEmailSent: false,
+    usageChart: null,
+    requestsChart: null,
+    activeDocTab: 'overview',
+    
+    // Form data
+    loginEmail: '',
+    loginPassword: '',
+    signupName: '',
+    signupEmail: '',
+    signupPassword: '',
+    signupCompany: '',
+    
+    // Methods
+    async login() {
+        this.loading = true;
+        
+        try {
+            const response = await fetch('/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: this.loginEmail,
+                    password: this.loginPassword
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.apiToken = result.access_token;
+                localStorage.setItem('voiceforge_token', this.apiToken);
+                this.currentView = 'dashboard';
+                await this.loadDashboard();
+                showNotification('Welcome back!');
+            } else {
+                throw new Error(result.detail);
+            }
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            this.loading = false;
+        }
+    },
+    
+    async signup() {
+        this.loading = true;
+        
+        try {
+            const response = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    full_name: this.signupName,
+                    email: this.signupEmail,
+                    password: this.signupPassword,
+                    company: this.signupCompany
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                showNotification('Account created! Please login.');
+                this.activeTab = 'login';
+            } else {
+                throw new Error(result.detail);
+            }
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            this.loading = false;
+        }
+    },
+    
+    async sendPasswordReset() {
+        this.loading = true;
+        this.resetEmailSent = false;
+        
+        try {
+            const response = await fetch('/api/v1/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: this.resetEmail
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                this.resetEmailSent = true;
+                showNotification('Password reset link sent to your email!');
+                // Close modal after 3 seconds
+                setTimeout(() => {
+                    this.showForgotPassword = false;
+                    this.resetEmail = '';
+                    this.resetEmailSent = false;
+                }, 3000);
+            } else {
+                throw new Error(result.detail || 'Failed to send reset link');
+            }
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            this.loading = false;
+        }
+    },
+    
+    async loadDashboard() {
+        try {
+            console.log('Loading dashboard with token:', this.apiToken);
+            // Get user info
+            const userResponse = await fetch('/api/v1/users/me', {
+                headers: { 'Authorization': `Bearer ${this.apiToken}` }
+            });
+            
+            if (userResponse.ok) {
+                this.currentUser = await userResponse.json();
+                console.log('User loaded:', this.currentUser);
+            } else {
+                console.error('Failed to load user:', userResponse.status, await userResponse.text());
+                // If token is invalid, clear it and show auth
+                if (userResponse.status === 401) {
+                    localStorage.removeItem('voiceforge_token');
+                    this.apiToken = null;
+                    this.currentView = 'auth';
+                    return;
+                }
+            }
+            
+            // Get stats
+            const statsResponse = await fetch('/api/v1/users/stats', {
+                headers: { 'Authorization': `Bearer ${this.apiToken}` }
+            });
+            
+            if (statsResponse.ok) {
+                this.stats = await statsResponse.json();
+                this.initializeCharts();
+            }
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+        }
+    },
+    
+    logout() {
+        localStorage.removeItem('voiceforge_token');
+        this.apiToken = null;
+        this.currentUser = null;
+        this.stats = null;
+        this.currentView = 'auth';
+        showNotification('Signed out successfully');
+    },
+    
+    initializeCharts() {
+        // Chart initialization will be handled by other functions
+        console.log('Charts would be initialized here');
+    }
+}" x-init="
+    $nextTick(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const oauthToken = urlParams.get('token');
+        console.log('OAuth token from URL:', oauthToken);
+        console.log('loadDashboard function exists:', typeof this.loadDashboard);
+        
+        if (oauthToken) {
+            localStorage.setItem('voiceforge_token', oauthToken);
+            this.apiToken = oauthToken;
+            window.history.replaceState({}, document.title, window.location.pathname);
+            this.currentView = 'dashboard';
+            console.log('OAuth login successful! Redirecting to dashboard...');
+            // Reload the page to ensure fresh state
+            setTimeout(() => {
+                window.location.href = '/developer';
+            }, 500);
+        } else if (this.apiToken) {
+            this.currentView = 'dashboard';
+            console.log('Existing token found, showing dashboard');
+        }
+    })
+">
+    
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 glass-effect border-b border-gray-800/50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="/" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">VF</span>
+                    </div>
+                    <div>
+                        <div class="text-xl font-bold">VoiceForge</div>
+                        <div class="text-xs text-gray-400">Developer Portal</div>
+                    </div>
+                </a>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center space-x-6" x-show="currentView === 'dashboard'">
+                    <a href="/docs" class="text-gray-400 hover:text-white transition">Documentation</a>
+                    <a href="/" class="text-gray-400 hover:text-white transition">Home</a>
+                    <button @click="logout()" class="px-4 py-2 rounded-xl glass-effect hover:bg-white/10 transition text-sm font-medium">
+                        Sign Out
+                    </button>
+                </nav>
+                
+                <div x-show="currentView === 'auth'" class="flex items-center space-x-4">
+                    <a href="/docs" class="text-gray-400 hover:text-white transition">Documentation</a>
+                    <a href="/" class="text-gray-400 hover:text-white transition">Home</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Authentication Section -->
+    <div x-show="currentView === 'auth'" class="min-h-screen pt-20 px-4">
+        <div class="max-w-md mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold mb-4">
+                    Welcome to <span class="gradient-text">VoiceForge</span>
+                </h1>
+                <p class="text-gray-400">Get your API key and start building amazing voice applications</p>
+            </div>
+            
+            <!-- Tab Navigation -->
+            <div class="flex mb-8 p-1 glass-effect rounded-2xl">
+                <button @click="activeTab = 'login'" 
+                        :class="activeTab === 'login' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'text-gray-400 hover:text-white'"
+                        class="flex-1 py-3 px-4 rounded-xl transition font-medium">
+                    Sign In
+                </button>
+                <button @click="activeTab = 'signup'" 
+                        :class="activeTab === 'signup' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'text-gray-400 hover:text-white'"
+                        class="flex-1 py-3 px-4 rounded-xl transition font-medium">
+                    Sign Up
+                </button>
+            </div>
+            
+            <!-- Login Form -->
+            <div x-show="activeTab === 'login'" class="glass-effect rounded-2xl p-8 fade-in">
+                <!-- Google OAuth Login -->
+                <div class="mb-6">
+                    <a href="/auth/google/login" class="w-full flex items-center justify-center px-4 py-3 bg-white text-gray-900 rounded-xl hover:bg-gray-100 transition font-medium mb-4">
+                        <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                            <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Continue with Google
+                    </a>
+                    
+                    <!-- Divider -->
+                    <div class="relative text-center">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-800"></div>
+                        </div>
+                        <div class="relative bg-gray-950 px-4">
+                            <span class="text-sm text-gray-400">or continue with email</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <form @submit.prevent="login()">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Email</label>
+                            <input type="email" x-model="loginEmail" required 
+                                   class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-sm font-medium">Password</label>
+                                <a href="#" @click.prevent="showForgotPassword = true" class="text-sm text-purple-400 hover:text-purple-300 transition">
+                                    Forgot password?
+                                </a>
+                            </div>
+                            <input type="password" x-model="loginPassword" required 
+                                   class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all">
+                        </div>
+                    </div>
+                    <button type="submit" :disabled="loading" 
+                            class="w-full mt-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl hover:from-purple-600 hover:to-pink-600 transition font-medium disabled:opacity-50">
+                        <span x-show="!loading">Sign In</span>
+                        <span x-show="loading" class="flex items-center justify-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Signing In...
+                        </span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Signup Form -->
+            <div x-show="activeTab === 'signup'" class="glass-effect rounded-2xl p-8 fade-in">
+                <!-- Google OAuth Signup -->
+                <div class="mb-6">
+                    <a href="/auth/google/login" class="w-full flex items-center justify-center px-4 py-3 bg-white text-gray-900 rounded-xl hover:bg-gray-100 transition font-medium mb-4">
+                        <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                            <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Sign up with Google
+                    </a>
+                    
+                    <!-- Divider -->
+                    <div class="relative text-center">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-800"></div>
+                        </div>
+                        <div class="relative bg-gray-950 px-4">
+                            <span class="text-sm text-gray-400">or create account with email</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <form @submit.prevent="signup()">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Full Name</label>
+                            <input type="text" x-model="signupName" required 
+                                   class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Email</label>
+                            <input type="email" x-model="signupEmail" required 
+                                   class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Password</label>
+                            <input type="password" x-model="signupPassword" required minlength="6"
+                                   class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Company (Optional)</label>
+                            <input type="text" x-model="signupCompany" 
+                                   class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all">
+                        </div>
+                    </div>
+                    <button type="submit" :disabled="loading" 
+                            class="w-full mt-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl hover:from-purple-600 hover:to-pink-600 transition font-medium disabled:opacity-50">
+                        <span x-show="!loading">Create Account & Get API Key</span>
+                        <span x-show="loading" class="flex items-center justify-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Creating Account...
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Forgot Password Modal -->
+    <div x-show="showForgotPassword" x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         @click.away="showForgotPassword = false">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" @click="showForgotPassword = false"></div>
+            
+            <!-- Modal -->
+            <div class="relative glass-effect rounded-2xl p-8 max-w-md w-full fade-in">
+                <button @click="showForgotPassword = false" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                
+                <h2 class="text-2xl font-bold mb-2">Reset Password</h2>
+                <p class="text-gray-400 mb-6">Enter your email address and we'll send you a password reset link.</p>
+                
+                <form @submit.prevent="sendPasswordReset()">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Email Address</label>
+                        <input type="email" x-model="resetEmail" required 
+                               class="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
+                               placeholder="Enter your registered email">
+                    </div>
+                    
+                    <button type="submit" :disabled="loading" 
+                            class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl hover:from-purple-600 hover:to-pink-600 transition font-medium disabled:opacity-50">
+                        <span x-show="!loading">Send Reset Link</span>
+                        <span x-show="loading" class="flex items-center justify-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Sending...
+                        </span>
+                    </button>
+                </form>
+                
+                <div x-show="resetEmailSent" class="mt-4 p-4 bg-green-500/20 border border-green-500/50 rounded-xl">
+                    <p class="text-green-400">✅ Check your email! We've sent you a password reset link.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dashboard Section -->
+    <div x-show="currentView === 'dashboard'" class="min-h-screen pt-20">
+        <!-- Welcome Header -->
+        <div class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-b border-gray-800/50">
+            <div class="container mx-auto px-6 py-12">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-4xl font-bold mb-2">
+                            Welcome back, <span x-text="currentUser?.full_name?.split(' ')[0] || 'Developer'" class="gradient-text"></span>! 👋
+                        </h1>
+                        <p class="text-gray-400">Manage your API keys, monitor usage, and track performance</p>
+                    </div>
+                    <div class="hidden lg:block floating">
+                        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 opacity-20"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Dashboard -->
+        <div class="container mx-auto px-6 py-8">
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- API Calls This Month -->
+                <div class="metric-card rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold" x-text="stats?.requests_this_month || 0"></div>
+                            <div class="text-sm text-gray-400">API Calls</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-400">This Month</span>
+                        <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full">
+                            +<span x-text="stats?.requests_today || 0"></span> today
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Usage Percentage -->
+                <div class="metric-card rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold" x-text="Math.round(((stats?.requests_this_month || 0) / (stats?.monthly_limit || 1000)) * 100) + '%'"></div>
+                            <div class="text-sm text-gray-400">Usage</div>
+                        </div>
+                    </div>
+                    <div class="w-full bg-gray-800 rounded-full h-2 mb-2">
+                        <div class="usage-bar h-2 rounded-full" :style="`width: ${Math.min(((stats?.requests_this_month || 0) / (stats?.monthly_limit || 1000)) * 100, 100)}%`"></div>
+                    </div>
+                    <span class="text-xs text-gray-400">
+                        <span x-text="stats?.requests_this_month || 0"></span> / <span x-text="stats?.monthly_limit || 1000"></span> calls
+                    </span>
+                </div>
+                
+                <!-- Processing Time -->
+                <div class="metric-card rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold" x-text="(stats?.avg_processing_time || 0) + 's'"></div>
+                            <div class="text-sm text-gray-400">Avg Time</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-400">Processing</span>
+                        <span class="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full">
+                            Excellent
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Total Words -->
+                <div class="metric-card rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                            </svg>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold" x-text="(stats?.total_words || 0).toLocaleString()"></div>
+                            <div class="text-sm text-gray-400">Words</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-400">Transcribed</span>
+                        <span class="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full">
+                            All Time
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- API Key Section -->
+            <div class="grid lg:grid-cols-3 gap-8 mb-8">
+                <!-- API Key Card -->
+                <div class="lg:col-span-2 glass-effect rounded-2xl p-6 card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold">API Configuration</h2>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs px-3 py-1 bg-green-500/20 text-green-400 rounded-full">
+                                <span class="w-2 h-2 bg-green-400 rounded-full inline-block mr-2 animate-pulse-slow"></span>
+                                Active
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- API Key Display -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-3">Your API Key</label>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-1 api-key-display rounded-xl p-4 font-mono text-sm">
+                                <span x-show="!showApiKey" x-text="currentUser?.api_key?.substring(0, 12) + '••••••••••••••••••••'"></span>
+                                <span x-show="showApiKey" x-text="currentUser?.api_key"></span>
+                            </div>
+                            <button @click="showApiKey = !showApiKey" 
+                                    class="px-4 py-3 glass-effect rounded-xl hover:bg-white/10 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path x-show="!showApiKey" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path x-show="!showApiKey" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    <path x-show="showApiKey" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L12 12m3.121-3.121L21 3m-6.879 6.878L12 12m0 0l3.121 3.121"></path>
+                                </svg>
+                            </button>
+                            <button @click="copyApiKey()" 
+                                    class="px-4 py-3 bg-purple-500 hover:bg-purple-600 rounded-xl transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Usage Instructions -->
+                    <div class="bg-gray-900/50 rounded-xl p-4">
+                        <h4 class="font-semibold mb-2">Quick Start</h4>
+                        <pre class="text-sm text-gray-300 overflow-x-auto"><code>curl -X POST https://api.voiceforge.ai/v1/transcribe \
+  -H "Authorization: Bearer <span x-text="currentUser?.api_key?.substring(0, 12) + '...'"></span>" \
+  -F "file=@audio.mp3"</code></pre>
+                    </div>
+                </div>
+                
+                <!-- Plan Information -->
+                <div class="glass-effect rounded-2xl p-6 card-hover">
+                    <h3 class="text-xl font-bold mb-4">Current Plan</h3>
+                    <div class="text-center mb-6">
+                        <div class="text-3xl font-bold gradient-text mb-2" x-text="stats?.plan_name || 'Free Plan'"></div>
+                        <div class="text-sm text-gray-400">
+                            <span x-text="stats?.monthly_limit === -1 ? 'Unlimited' : (stats?.monthly_limit || 1000).toLocaleString()"></span> calls/month
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center text-sm">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            All languages supported
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Real-time processing
+                        </div>
+                        <div class="flex items-center text-sm">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Community support
+                        </div>
+                    </div>
+                    
+                    <button class="w-full py-2 glass-effect rounded-xl hover:bg-white/10 transition text-sm font-medium">
+                        Upgrade Plan
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Usage Chart -->
+            <div class="glass-effect rounded-2xl p-6 mb-8">
+                <h3 class="text-xl font-bold mb-6">Usage Analytics</h3>
+                <div class="h-64">
+                    <canvas id="usageChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API Documentation Section -->
+        <div class="glass-effect rounded-2xl p-6 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">API Documentation</h3>
+                <div class="flex space-x-2">
+                    <button @click="activeDocTab = 'overview'" 
+                            :class="activeDocTab === 'overview' ? 'bg-purple-600' : 'bg-gray-700'"
+                            class="px-3 py-1 rounded-lg text-sm transition">Overview</button>
+                    <button @click="activeDocTab = 'transcription'" 
+                            :class="activeDocTab === 'transcription' ? 'bg-purple-600' : 'bg-gray-700'"
+                            class="px-3 py-1 rounded-lg text-sm transition">Transcription</button>
+                    <button @click="activeDocTab = 'streaming'" 
+                            :class="activeDocTab === 'streaming' ? 'bg-purple-600' : 'bg-gray-700'"
+                            class="px-3 py-1 rounded-lg text-sm transition">Real-time</button>
+                    <button @click="activeDocTab = 'python'" 
+                            :class="activeDocTab === 'python' ? 'bg-purple-600' : 'bg-gray-700'"
+                            class="px-3 py-1 rounded-lg text-sm transition">Python SDK</button>
+                </div>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div x-show="activeDocTab === 'overview'" class="space-y-6">
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-green-400">🚀 Getting Started</h4>
+                    <p class="text-gray-300 mb-4">VoiceForge API provides powerful speech-to-text capabilities with support for:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Audio file transcription
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            YouTube video transcription
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Real-time WebSocket streaming
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            50+ languages supported
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-purple-400">🔑 Authentication</h4>
+                    <p class="text-gray-300 mb-3">Include your API key in the Authorization header:</p>
+                    <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>Authorization: Bearer <span x-text="currentUser?.api_key?.substring(0, 12) + '...' || 'your_api_key'"></span></code></pre>
+                </div>
+                
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-blue-400">📊 Base URL</h4>
+                    <p class="text-gray-300 mb-3">All API endpoints use this base URL:</p>
+                    <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>https://api.voiceforge.ai</code></pre>
+                </div>
+            </div>
+            
+            <!-- Transcription Tab -->
+            <div x-show="activeDocTab === 'transcription'" class="space-y-6">
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-green-400">🎤 Audio File Transcription</h4>
+                    <p class="text-gray-300 mb-3">Transcribe audio files (MP3, WAV, M4A, etc.)</p>
+                    <div class="mb-4">
+                        <div class="text-sm font-semibold text-gray-400 mb-2">Endpoint:</div>
+                        <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>POST /api/v1/transcribe</code></pre>
+                    </div>
+                    <div class="mb-4">
+                        <div class="text-sm font-semibold text-gray-400 mb-2">cURL Example:</div>
+                        <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>curl -X POST https://api.voiceforge.ai/api/v1/transcribe \
+  -H "Authorization: Bearer <span x-text="currentUser?.api_key?.substring(0, 12) + '...' || 'your_api_key'"></span>" \
+  -F "file=@audio.mp3" \
+  -F "language=auto"</code></pre>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-gray-400 mb-2">Response:</div>
+                        <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>{
+  "status": "success",
+  "transcription": {
+    "text": "Hello, this is the transcribed text.",
+    "language": "en",
+    "duration": 10.5,
+    "confidence": 0.95,
+    "word_count": 6
+  }
+}</code></pre>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-red-400">🎬 YouTube Video Transcription</h4>
+                    <p class="text-gray-300 mb-3">Extract and transcribe audio from YouTube videos</p>
+                    <div class="mb-4">
+                        <div class="text-sm font-semibold text-gray-400 mb-2">Endpoint:</div>
+                        <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>POST /api/v1/transcribe/youtube</code></pre>
+                    </div>
+                    <div class="mb-4">
+                        <div class="text-sm font-semibold text-gray-400 mb-2">cURL Example:</div>
+                        <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>curl -X POST https://api.voiceforge.ai/api/v1/transcribe/youtube \
+  -H "Authorization: Bearer <span x-text="currentUser?.api_key?.substring(0, 12) + '...' || 'your_api_key'"></span>" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://youtube.com/watch?v=VIDEO_ID", "language": "auto"}'</code></pre>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-gray-400 mb-2">Response:</div>
+                        <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>{
+  "status": "success",
+  "transcription": {
+    "text": "Full video transcript here...",
+    "language": "en",
+    "duration": 120.5,
+    "confidence": 0.92,
+    "segments": [...]
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Streaming Tab -->
+            <div x-show="activeDocTab === 'streaming'" class="space-y-6">
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-blue-400">⚡ Real-time WebSocket Streaming</h4>
+                    <p class="text-gray-300 mb-3">Stream audio in real-time and get instant transcription results</p>
+                    <div class="mb-4">
+                        <div class="text-sm font-semibold text-gray-400 mb-2">WebSocket URL:</div>
+                        <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>wss://api.voiceforge.ai/ws/v1/transcribe?api_key=<span x-text="currentUser?.api_key?.substring(0, 12) + '...' || 'your_api_key'"></span></code></pre>
+                    </div>
+                    <div class="mb-4">
+                        <div class="text-sm font-semibold text-gray-400 mb-2">JavaScript Example:</div>
+                        <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>const ws = new WebSocket('wss://api.voiceforge.ai/ws/v1/transcribe?api_key=YOUR_API_KEY');
+
+ws.onopen = () => {
+  console.log('Connected to VoiceForge streaming');
+  
+  // Send audio configuration
+  ws.send(JSON.stringify({
+    type: 'config',
+    sample_rate: 16000,
+    language: 'auto'
+  }));
+};
+
+ws.onmessage = (event) => {
+  const result = JSON.parse(event.data);
+  if (result.type === 'transcription') {
+    console.log('Transcription:', result.text);
+  }
+};
+
+// Send audio chunks (binary data)
+function sendAudioChunk(audioBuffer) {
+  ws.send(audioBuffer);
+}</code></pre>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-gray-400 mb-2">Response Format:</div>
+                        <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>{
+  "type": "transcription",
+  "text": "partial transcription",
+  "is_final": false,
+  "confidence": 0.87,
+  "start_time": 1.2,
+  "end_time": 2.5
+}</code></pre>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-yellow-400">📱 Browser Audio Streaming</h4>
+                    <p class="text-gray-300 mb-3">Capture microphone audio and stream to VoiceForge</p>
+                    <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>// Get microphone access
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+const mediaRecorder = new MediaRecorder(stream);
+const audioChunks = [];
+
+mediaRecorder.ondataavailable = (event) => {
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(event.data);
+  }
+};
+
+// Start recording
+mediaRecorder.start(100); // Send chunks every 100ms</code></pre>
+                </div>
+            </div>
+            
+            <!-- Python SDK Tab -->
+            <div x-show="activeDocTab === 'python'" class="space-y-6">
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-green-400">🐍 Python SDK Installation</h4>
+                    <p class="text-gray-300 mb-3">Install the VoiceForge Python SDK:</p>
+                    <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>pip install voiceforge-python</code></pre>
+                </div>
+                
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-blue-400">🚀 Quick Start</h4>
+                    <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code>import asyncio
+from voiceforge import VoiceForgeClient
+
+async def main():
+    client = VoiceForgeClient(api_key="<span x-text="currentUser?.api_key?.substring(0, 12) + '...' || 'your_api_key'"></span>")
+    
+    # Transcribe audio file
+    result = await client.transcribe_file("audio.mp3")
+    print(f"Transcription: {result.text}")
+    
+    # Transcribe YouTube video
+    result = await client.transcribe_youtube("https://youtube.com/watch?v=VIDEO_ID")
+    print(f"Video transcript: {result.text}")
+    
+    # Real-time streaming
+    async with client.stream_transcription() as stream:
+        # Send audio chunks
+        await stream.send_audio(audio_chunk)
+        
+        # Receive transcriptions
+        async for result in stream:
+            print(f"Live: {result.text}")
+
+asyncio.run(main())</code></pre>
+                </div>
+                
+                <div class="bg-gray-900/50 rounded-xl p-4">
+                    <h4 class="font-semibold mb-3 text-purple-400">📊 Usage Analytics</h4>
+                    <pre class="text-sm text-gray-300 bg-black/50 p-3 rounded overflow-x-auto"><code># Get your usage statistics
+usage = await client.get_usage()
+print(f"Calls this month: {usage.calls_used}/{usage.monthly_limit}")
+print(f"Minutes transcribed: {usage.minutes_used}")
+
+# Get detailed stats
+stats = await client.get_stats()
+print(f"Total transcriptions: {stats.total_transcriptions}")
+print(f"Average accuracy: {stats.average_confidence}")</code></pre>
+                </div>
+                
+                <div class="bg-yellow-900/30 border border-yellow-600/30 rounded-xl p-4">
+                    <div class="flex items-center mb-2">
+                        <svg class="w-5 h-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <h5 class="font-semibold text-yellow-400">SDK Status</h5>
+                    </div>
+                    <p class="text-sm text-yellow-200">The Python SDK is currently in beta. Some features like WebSocket streaming and usage analytics are being finalized. For now, you can use the REST API directly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        function showNotification(message, type = 'success') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-xl text-white font-medium transition-all transform translate-x-full ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // Alpine.js methods
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('app', {
+                async login() {
+                    this.loading = true;
+                    
+                    try {
+                        const response = await fetch('/api/v1/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                email: this.loginEmail,
+                                password: this.loginPassword
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            this.apiToken = result.access_token;
+                            localStorage.setItem('voiceforge_token', this.apiToken);
+                            this.currentView = 'dashboard';
+                            await this.loadDashboard();
+                            showNotification('Welcome back!');
+                        } else {
+                            throw new Error(result.detail);
+                        }
+                    } catch (error) {
+                        showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async signup() {
+                    this.loading = true;
+                    
+                    try {
+                        const response = await fetch('/api/v1/auth/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                full_name: this.signupName,
+                                email: this.signupEmail,
+                                password: this.signupPassword,
+                                company: this.signupCompany
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            showNotification('Account created! Please login.');
+                            this.activeTab = 'login';
+                        } else {
+                            throw new Error(result.detail);
+                        }
+                    } catch (error) {
+                        showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async loadDashboard() {
+                    try {
+                        console.log('Loading dashboard with token:', this.apiToken);
+                        // Get user info
+                        const userResponse = await fetch('/api/v1/users/me', {
+                            headers: { 'Authorization': `Bearer ${this.apiToken}` }
+                        });
+                        
+                        if (userResponse.ok) {
+                            this.currentUser = await userResponse.json();
+                            console.log('User loaded:', this.currentUser);
+                        } else {
+                            console.error('Failed to load user:', userResponse.status, await userResponse.text());
+                            // If token is invalid, clear it and show auth
+                            if (userResponse.status === 401) {
+                                localStorage.removeItem('voiceforge_token');
+                                this.apiToken = null;
+                                this.currentView = 'auth';
+                                return;
+                            }
+                        }
+                        
+                        // Get stats
+                        const statsResponse = await fetch('/api/v1/users/stats', {
+                            headers: { 'Authorization': `Bearer ${this.apiToken}` }
+                        });
+                        
+                        if (statsResponse.ok) {
+                            this.stats = await statsResponse.json();
+                            this.initializeCharts();
+                        }
+                    } catch (error) {
+                        console.error('Error loading dashboard:', error);
+                    }
+                },
+                
+                initializeCharts() {
+                    // Usage chart
+                    const ctx = document.getElementById('usageChart');
+                    if (ctx && !this.usageChart) {
+                        this.usageChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                                datasets: [{
+                                    label: 'API Calls',
+                                    data: [65, 120, 80, 200, 150, this.stats?.requests_this_month || 0],
+                                    borderColor: 'rgb(103, 126, 234)',
+                                    backgroundColor: 'rgba(103, 126, 234, 0.1)',
+                                    tension: 0.4,
+                                    fill: true
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: 'rgba(255, 255, 255, 0.1)'
+                                        },
+                                        ticks: {
+                                            color: 'rgba(255, 255, 255, 0.6)'
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            color: 'rgba(255, 255, 255, 0.1)'
+                                        },
+                                        ticks: {
+                                            color: 'rgba(255, 255, 255, 0.6)'
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                },
+                
+                copyApiKey() {
+                    navigator.clipboard.writeText(this.currentUser.api_key);
+                    showNotification('API key copied to clipboard!');
+                },
+                
+                logout() {
+                    localStorage.removeItem('voiceforge_token');
+                    this.apiToken = null;
+                    this.currentUser = null;
+                    this.stats = null;
+                    this.currentView = 'auth';
+                    showNotification('Signed out successfully');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VoiceForge Test Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            min-height: 100px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 VoiceForge Upload Test</h1>
+        
+        <input type="file" id="audioFile" accept=".mp3,.wav,.m4a,.mp4,.ogg,.flac">
+        
+        <button id="uploadBtn" onclick="uploadFile()">Upload & Transcribe</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById('audioFile');
+            const resultDiv = document.getElementById('result');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="error">Please select a file first!</div>';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            uploadBtn.disabled = true;
+            resultDiv.innerHTML = '<div class="loading">⏳ Uploading and processing...</div>';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                console.log('Uploading file:', file.name);
+                
+                const response = await fetch('http://localhost:8000/api/v1/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Success!</h3>
+                            <p><strong>File:</strong> ${data.transcription.file_name}</p>
+                            <p><strong>Size:</strong> ${(data.transcription.file_size / 1024).toFixed(2)} KB</p>
+                            <p><strong>Language:</strong> ${data.transcription.language}</p>
+                            <p><strong>Text:</strong></p>
+                            <div style="background: white; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                                ${data.transcription.text}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${data.detail || 'Upload failed'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        }
+        
+        // Test connection on load
+        window.onload = async () => {
+            try {
+                const response = await fetch('http://localhost:8000/status');
+                const data = await response.json();
+                console.log('API Status:', data);
+            } catch (error) {
+                console.error('API not reachable:', error);
+                document.getElementById('result').innerHTML = 
+                    '<div class="error">⚠️ API not running. Please start the server first.</div>';
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+# Kustomization file for VoiceForge STT deployment
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: voiceforge-stt
+  namespace: voiceforge-stt
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: voiceforge
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/part-of: voiceforge-stt
+  app.kubernetes.io/managed-by: kustomize
+
+# Resources to include in deployment
+resources:
+- namespace.yaml
+- secrets.yaml
+- configmap.yaml
+- postgres.yaml
+- redis.yaml
+- api.yaml
+- worker.yaml
+- monitoring.yaml
+- ingress.yaml
+
+# Configuration patches
+patchesStrategicMerge:
+- patches/api-patch.yaml
+- patches/worker-patch.yaml
+
+# Image transformations
+images:
+- name: voiceforge/stt-api
+  newTag: v1.0.0
+- name: voiceforge/stt-worker
+  newTag: v1.0.0
+- name: voiceforge/stt-flower
+  newTag: v1.0.0
+
+# ConfigMap and Secret generators
+configMapGenerator:
+- name: voiceforge-deployment-config
+  literals:
+  - DEPLOYMENT_ENV=production
+  - DEPLOYMENT_VERSION=1.0.0
+  - DEPLOYMENT_DATE=2024-01-01
+
+# Resource limits and requests adjustments
+replicas:
+- name: voiceforge-api
+  count: 3
+- name: voiceforge-worker
+  count: 4
+- name: voiceforge-worker-batch
+  count: 2
+
+# Namespace prefix
+namespace: voiceforge-stt
+
+# Variables that can be substituted
+vars:
+- name: NAMESPACE
+  objref:
+    kind: Namespace
+    name: voiceforge-stt
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name
+
+- name: API_SERVICE_NAME
+  objref:
+    kind: Service
+    name: voiceforge-api
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name

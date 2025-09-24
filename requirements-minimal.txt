@@ -1,0 +1,38 @@
+# Minimal requirements for local testing
+# Core Web Framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic==2.10.0
+pydantic-settings==2.6.0
+python-multipart==0.0.9
+httpx==0.27.2
+websockets==13.1
+aiofiles>=23.0.0
+
+# Database (SQLite for local)
+sqlalchemy==2.0.35
+aiosqlite==0.20.0
+alembic==1.13.3
+
+# Redis (optional)
+redis[hiredis]==5.2.0
+aiocache==0.12.3
+
+# ML/AI Core (minimal)
+torch==2.5.0
+transformers==4.45.0
+openai-whisper==20231117
+numpy==1.26.4
+
+# Audio Processing (basic)
+librosa==0.10.2.post1
+soundfile==0.12.1
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Utilities
+python-dotenv==1.0.1
+structlog==24.4.0
+python-dateutil==2.9.0

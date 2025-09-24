@@ -1,0 +1,313 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voiceforge-worker
+  namespace: voiceforge-stt
+  labels:
+    app.kubernetes.io/name: voiceforge
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: voiceforge
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: voiceforge
+        app.kubernetes.io/component: worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      imagePullSecrets:
+      - name: voiceforge-registry-secret
+      containers:
+      - name: worker
+        image: voiceforge/stt-worker:latest  # Replace with actual image
+        imagePullPolicy: IfNotPresent
+        command:
+        - celery
+        - -A
+        - app.worker
+        - worker
+        - --loglevel=INFO
+        - --concurrency=2
+        - --queues=transcription,batch,cleanup
+        - --max-tasks-per-child=100
+        - --time-limit=3600
+        - --soft-time-limit=3300
+        ports:
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: CELERY_WORKER_NAME
+          value: "worker@$(POD_NAME).$(POD_NAMESPACE)"
+        envFrom:
+        - configMapRef:
+            name: voiceforge-config
+        - secretRef:
+            name: voiceforge-secrets
+        volumeMounts:
+        - name: models-storage
+          mountPath: /app/models
+        - name: temp-storage
+          mountPath: /tmp
+        resources:
+          requests:
+            memory: "6Gi"
+            cpu: "3000m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "12Gi"
+            cpu: "6000m"
+            nvidia.com/gpu: 1
+        livenessProbe:
+          exec:
+            command:
+            - celery
+            - -A
+            - app.worker
+            - inspect
+            - ping
+            - --destination
+            - celery@$(POD_NAME).$(POD_NAMESPACE)
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - celery
+            - -A
+            - app.worker
+            - inspect
+            - active
+            - --destination
+            - celery@$(POD_NAME).$(POD_NAMESPACE)
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+      volumes:
+      - name: models-storage
+        persistentVolumeClaim:
+          claimName: voiceforge-models-pvc
+      - name: temp-storage
+        emptyDir:
+          sizeLimit: 20Gi
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - gpu-node
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 50
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                  - worker
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voiceforge-worker-batch
+  namespace: voiceforge-stt
+  labels:
+    app.kubernetes.io/name: voiceforge
+    app.kubernetes.io/component: worker-batch
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: voiceforge
+      app.kubernetes.io/component: worker-batch
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: voiceforge
+        app.kubernetes.io/component: worker-batch
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      imagePullSecrets:
+      - name: voiceforge-registry-secret
+      containers:
+      - name: worker-batch
+        image: voiceforge/stt-worker:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - celery
+        - -A
+        - app.worker
+        - worker
+        - --loglevel=INFO
+        - --concurrency=1
+        - --queues=batch
+        - --max-tasks-per-child=10
+        - --time-limit=7200
+        - --soft-time-limit=6900
+        ports:
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CELERY_WORKER_NAME
+          value: "batch-worker@$(POD_NAME).$(POD_NAMESPACE)"
+        envFrom:
+        - configMapRef:
+            name: voiceforge-config
+        - secretRef:
+            name: voiceforge-secrets
+        volumeMounts:
+        - name: models-storage
+          mountPath: /app/models
+        - name: temp-storage
+          mountPath: /tmp
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "4000m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "16Gi"
+            cpu: "8000m"
+            nvidia.com/gpu: 1
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+      volumes:
+      - name: models-storage
+        persistentVolumeClaim:
+          claimName: voiceforge-models-pvc
+      - name: temp-storage
+        emptyDir:
+          sizeLimit: 50Gi
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - gpu-node
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: voiceforge-worker-hpa
+  namespace: voiceforge-stt
+  labels:
+    app.kubernetes.io/name: voiceforge
+    app.kubernetes.io/component: worker
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: voiceforge-worker
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 85
+  - type: Pods
+    pods:
+      metric:
+        name: celery_queue_length
+      target:
+        type: AverageValue
+        averageValue: "5"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60

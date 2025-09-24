@@ -1,0 +1,173 @@
+# Production patches for Worker deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voiceforge-worker
+  namespace: voiceforge-stt
+spec:
+  template:
+    spec:
+      containers:
+      - name: worker
+        # Production resource limits
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "4000m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "16Gi"
+            cpu: "8000m"
+            nvidia.com/gpu: 1
+        
+        # Production Celery configuration
+        command:
+        - celery
+        - -A
+        - app.worker
+        - worker
+        - --loglevel=WARNING
+        - --concurrency=4
+        - --queues=transcription,batch,cleanup
+        - --max-tasks-per-child=50
+        - --time-limit=1800
+        - --soft-time-limit=1500
+        - --prefetch-multiplier=2
+        - --optimization=fair
+        
+        # Enhanced environment for production
+        env:
+        - name: CELERY_TASK_ALWAYS_EAGER
+          value: "false"
+        - name: CELERY_TASK_EAGER_PROPAGATES
+          value: "false"
+        - name: CELERY_WORKER_PREFETCH_MULTIPLIER
+          value: "2"
+        - name: CELERY_TASK_REJECT_ON_WORKER_LOST
+          value: "true"
+        - name: CELERY_WORKER_DISABLE_RATE_LIMITS
+          value: "false"
+        
+        # Production health checks
+        livenessProbe:
+          exec:
+            command:
+            - celery
+            - -A
+            - app.worker
+            - inspect
+            - ping
+            - --destination
+            - celery@$(HOSTNAME)
+          initialDelaySeconds: 90
+          periodSeconds: 45
+          timeoutSeconds: 15
+          failureThreshold: 3
+        
+        readinessProbe:
+          exec:
+            command:
+            - celery
+            - -A
+            - app.worker
+            - inspect
+            - active
+            - --destination
+            - celery@$(HOSTNAME)
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 15
+          failureThreshold: 3
+      
+      # Production node selection
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - gpu-node
+                - worker-node
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: instance-type
+                operator: In
+                values:
+                - g4dn.2xlarge
+                - g4dn.4xlarge
+                - p3.2xlarge
+        
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                  - worker
+              topologyKey: kubernetes.io/hostname
+---
+# Batch worker production patch
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voiceforge-worker-batch
+  namespace: voiceforge-stt
+spec:
+  template:
+    spec:
+      containers:
+      - name: worker-batch
+        # Production resource limits for batch processing
+        resources:
+          requests:
+            memory: "12Gi"
+            cpu: "6000m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "24Gi"
+            cpu: "12000m"
+            nvidia.com/gpu: 1
+        
+        # Batch-optimized Celery configuration
+        command:
+        - celery
+        - -A
+        - app.worker
+        - worker
+        - --loglevel=WARNING
+        - --concurrency=2
+        - --queues=batch
+        - --max-tasks-per-child=5
+        - --time-limit=14400  # 4 hours
+        - --soft-time-limit=14100
+        - --prefetch-multiplier=1
+        - --optimization=fair
+        
+        env:
+        - name: CELERY_WORKER_PREFETCH_MULTIPLIER
+          value: "1"
+        - name: CELERY_TASK_ACKS_LATE
+          value: "true"
+        - name: CELERY_WORKER_ENABLE_REMOTE_CONTROL
+          value: "true"
+        
+      # Prefer larger instances for batch processing
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: instance-type
+                operator: In
+                values:
+                - g4dn.8xlarge
+                - g4dn.12xlarge
+                - p3.8xlarge
