@@ -1,0 +1,29 @@
+# FFmpeg executables
+ffmpeg.exe
+ffplay.exe
+ffprobe.exe
+ffmpeg-temp.zip
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment files
+.env
+venv/
+env/
+
+# Temporary files
+*.tmp
+*.temp
+uploads/temp/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
